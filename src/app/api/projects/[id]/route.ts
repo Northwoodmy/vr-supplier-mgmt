@@ -16,6 +16,12 @@ export async function GET(
             supplier: true,
           },
         },
+        deliveries: true,
+        qualityReviews: {
+          include: {
+            supplier: true,
+          },
+        },
       },
     });
 

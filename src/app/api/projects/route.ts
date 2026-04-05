@@ -10,6 +10,12 @@ export async function GET() {
             supplier: true,
           },
         },
+        _count: {
+          select: {
+            suppliers: true,
+            deliveries: true,
+          },
+        },
       },
       orderBy: { createdAt: 'desc' },
     });
