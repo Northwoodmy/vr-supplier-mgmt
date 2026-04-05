@@ -151,9 +151,14 @@ export default function SupplierDetailPage() {
             </Badge>
           </div>
         </div>
-        <Button variant="outline" onClick={() => router.push('/suppliers')}>
-          返回列表
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button variant="outline" onClick={() => router.push(`/suppliers/${supplier.id}/edit`)}>
+            编辑
+          </Button>
+          <Button variant="outline" onClick={() => router.push('/suppliers')}>
+            返回列表
+          </Button>
+        </div>
       </div>
 
       {/* Contact Information */}
