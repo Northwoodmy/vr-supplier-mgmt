@@ -367,7 +367,7 @@ export default function NewProjectPage() {
               <Button type="button" variant="outline" onClick={() => router.push('/projects')}>
                 取消
               </Button>
-              <Button type="submit" disabled={loading || createProject.isPending}>
+              <Button type="submit" disabled={loading}>
                 {loading ? '保存中...' : '保存项目'}
               </Button>
             </div>
