@@ -60,12 +60,37 @@ const STATUS_OPTIONS = [
   { value: 'cancelled', label: '已取消' },
 ];
 
+interface ProjectFormData {
+  name: string;
+  code: string;
+  description: string;
+  status: string;
+  currentStage: string;
+  budget: string;
+  actualCost: string;
+  startDate: string;
+  endDate: string;
+  expectedDeliveryDate: string;
+}
+
 export default function NewProjectPage() {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [selectedSuppliers, setSelectedSuppliers] = useState<SupplierProjectFormData[]>([]);
   const [suppliers, setSuppliers] = useState<Supplier[]>([]);
   const [saturations, setSaturations] = useState<Saturation[]>([]);
+  const [formData, setFormData] = useState<ProjectFormData>({
+    name: '',
+    code: '',
+    description: '',
+    status: 'planning',
+    currentStage: 'planning',
+    budget: '',
+    actualCost: '',
+    startDate: '',
+    endDate: '',
+    expectedDeliveryDate: '',
+  });
 
   useEffect(() => {
     async function fetchData() {
@@ -112,19 +137,17 @@ export default function NewProjectPage() {
     e.preventDefault();
     setLoading(true);
 
-    const formData = new FormData(e.currentTarget);
-
     const projectData = {
-      name: formData.get('name') as string,
-      code: formData.get('code') as string,
-      description: formData.get('description') as string || undefined,
-      budget: formData.get('budget') ? parseFloat(formData.get('budget') as string) : null,
-      actualCost: formData.get('actualCost') ? parseFloat(formData.get('actualCost') as string) : null,
-      startDate: formData.get('startDate') as string || '',
-      endDate: formData.get('endDate') as string || '',
-      expectedDeliveryDate: formData.get('expectedDeliveryDate') as string || '',
-      status: formData.get('status') as string,
-      currentStage: formData.get('currentStage') as string,
+      name: formData.name,
+      code: formData.code,
+      description: formData.description || undefined,
+      budget: formData.budget ? parseFloat(formData.budget) : null,
+      actualCost: formData.actualCost ? parseFloat(formData.actualCost) : null,
+      startDate: formData.startDate || '',
+      endDate: formData.endDate || '',
+      expectedDeliveryDate: formData.expectedDeliveryDate || '',
+      status: formData.status,
+      currentStage: formData.currentStage,
     };
 
     const validSuppliers = selectedSuppliers.filter(sp => sp.supplierId);
@@ -171,42 +194,57 @@ export default function NewProjectPage() {
             <div className="grid gap-4 md:grid-cols-2">
               <div className="space-y-2">
                 <Label htmlFor="name">项目名称 *</Label>
-                <Input id="name" name="name" placeholder="请输入项目名称" required />
+                <Input
+                  id="name"
+                  value={formData.name}
+                  onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
+                  placeholder="请输入项目名称"
+                  required
+                />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="code">项目编号 *</Label>
-                <Input id="code" name="code" placeholder="例如：PRJ-2024-001" required />
+                <Input
+                  id="code"
+                  value={formData.code}
+                  onChange={(e) => setFormData(prev => ({ ...prev, code: e.target.value }))}
+                  placeholder="例如：PRJ-2024-001"
+                  required
+                />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="status">项目状态</Label>
-                <Select name="status" defaultValue="planning">
+                <Select
+                  value={formData.status}
+                  onValueChange={(value) => setFormData(prev => ({ ...prev, status: value }))}
+                >
                   <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="planning">筹备中</SelectItem>
-                    <SelectItem value="pre_production">预制作</SelectItem>
-                    <SelectItem value="production">制作中</SelectItem>
-                    <SelectItem value="review">审核中</SelectItem>
-                    <SelectItem value="delivery">交付中</SelectItem>
-                    <SelectItem value="completed">已完成</SelectItem>
-                    <SelectItem value="cancelled">已取消</SelectItem>
+                    {STATUS_OPTIONS.map((opt) => (
+                      <SelectItem key={opt.value} value={opt.value}>
+                        {opt.label}
+                      </SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
               </div>
               <div className="space-y-2">
                 <Label htmlFor="currentStage">当前阶段</Label>
-                <Select name="currentStage" defaultValue="planning">
+                <Select
+                  value={formData.currentStage}
+                  onValueChange={(value) => setFormData(prev => ({ ...prev, currentStage: value }))}
+                >
                   <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="planning">规划中</SelectItem>
-                    <SelectItem value="pre_production">预制作</SelectItem>
-                    <SelectItem value="production">制作中</SelectItem>
-                    <SelectItem value="review">审核中</SelectItem>
-                    <SelectItem value="delivery">交付中</SelectItem>
-                    <SelectItem value="paused">已暂停</SelectItem>
+                    {STAGE_OPTIONS.map((opt) => (
+                      <SelectItem key={opt.value} value={opt.value}>
+                        {opt.label}
+                      </SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
               </div>
@@ -216,7 +254,8 @@ export default function NewProjectPage() {
               <Label htmlFor="description">项目描述</Label>
               <Textarea
                 id="description"
-                name="description"
+                value={formData.description}
+                onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
                 placeholder="请输入项目描述"
                 rows={3}
               />
@@ -226,26 +265,55 @@ export default function NewProjectPage() {
             <div className="grid gap-4 md:grid-cols-3">
               <div className="space-y-2">
                 <Label htmlFor="budget">预算（元）</Label>
-                <Input id="budget" name="budget" type="number" placeholder="0" step="0.01" />
+                <Input
+                  id="budget"
+                  value={formData.budget}
+                  onChange={(e) => setFormData(prev => ({ ...prev, budget: e.target.value }))}
+                  type="number"
+                  placeholder="0"
+                  step="0.01"
+                />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="actualCost">实际成本（元）</Label>
-                <Input id="actualCost" name="actualCost" type="number" placeholder="0" step="0.01" />
+                <Input
+                  id="actualCost"
+                  value={formData.actualCost}
+                  onChange={(e) => setFormData(prev => ({ ...prev, actualCost: e.target.value }))}
+                  type="number"
+                  placeholder="0"
+                  step="0.01"
+                />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="expectedDeliveryDate">预计交付日期</Label>
-                <Input id="expectedDeliveryDate" name="expectedDeliveryDate" type="date" />
+                <Input
+                  id="expectedDeliveryDate"
+                  value={formData.expectedDeliveryDate}
+                  onChange={(e) => setFormData(prev => ({ ...prev, expectedDeliveryDate: e.target.value }))}
+                  type="date"
+                />
               </div>
             </div>
 
             <div className="grid gap-4 md:grid-cols-2">
               <div className="space-y-2">
                 <Label htmlFor="startDate">开始日期</Label>
-                <Input id="startDate" name="startDate" type="date" />
+                <Input
+                  id="startDate"
+                  value={formData.startDate}
+                  onChange={(e) => setFormData(prev => ({ ...prev, startDate: e.target.value }))}
+                  type="date"
+                />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="endDate">结束日期</Label>
-                <Input id="endDate" name="endDate" type="date" />
+                <Input
+                  id="endDate"
+                  value={formData.endDate}
+                  onChange={(e) => setFormData(prev => ({ ...prev, endDate: e.target.value }))}
+                  type="date"
+                />
               </div>
             </div>
 
