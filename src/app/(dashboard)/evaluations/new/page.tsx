@@ -6,7 +6,6 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { trpc } from '@/lib/trpc';
 import { Slider } from '@/components/ui/slider';
 
 // 权重配置
@@ -47,33 +46,33 @@ export default function NewEvaluationPage() {
   });
   const [comments, setComments] = useState('');
   const [submitting, setSubmitting] = useState(false);
+  const [project, setProject] = useState<any>(null);
+  const [supplier, setSupplier] = useState<any>(null);
 
   // 获取项目信息
-  const { data: project } = trpc.project.getById.useQuery(projectId || '', {
-    enabled: !!projectId,
-  });
+  useEffect(() => {
+    if (!projectId) return;
+    fetch(`/api/projects/${projectId}`)
+      .then((res) => res.json())
+      .then((data) => setProject(data))
+      .catch((err) => console.error('Failed to fetch project:', err));
+  }, [projectId]);
 
   // 获取供应商信息
-  const { data: supplier } = trpc.supplier.getById.useQuery(supplierId || '', {
-    enabled: !!supplierId,
-  });
+  useEffect(() => {
+    if (!supplierId) return;
+    fetch(`/api/suppliers/${supplierId}`)
+      .then((res) => res.json())
+      .then((data) => setSupplier(data))
+      .catch((err) => console.error('Failed to fetch supplier:', err));
+  }, [supplierId]);
 
   // 计算加权总分
   const totalScore = Object.entries(scores).reduce((sum, [key, value]) => {
     return sum + value * WEIGHTS[key as DimensionKey];
   }, 0);
 
-  const submitEvaluation = trpc.evaluation.submit.useMutation({
-    onSuccess: () => {
-      router.push('/evaluations');
-    },
-    onError: (error) => {
-      setSubmitting(false);
-      alert(`提交失败：${error.message}`);
-    },
-  });
-
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
     if (!projectId || !supplierId) {
@@ -83,17 +82,33 @@ export default function NewEvaluationPage() {
 
     setSubmitting(true);
 
-    submitEvaluation.mutate({
-      projectId,
-      supplierId,
-      visualQuality: scores.visualQuality,
-      animationSmoothness: scores.animationSmoothness,
-      vfxMatch: scores.vfxMatch,
-      audioQuality: scores.audioQuality,
-      cameraWork: scores.cameraWork,
-      storyNovelty: scores.storyNovelty,
-      comments: comments || undefined,
-    });
+    try {
+      const res = await fetch('/api/evaluations', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          projectId,
+          supplierId,
+          visualQuality: scores.visualQuality,
+          animationSmoothness: scores.animationSmoothness,
+          vfxMatch: scores.vfxMatch,
+          audioQuality: scores.audioQuality,
+          cameraWork: scores.cameraWork,
+          storyNovelty: scores.storyNovelty,
+          comments: comments || undefined,
+        }),
+      });
+
+      if (res.ok) {
+        router.push('/evaluations');
+      } else {
+        const error = await res.json();
+        throw new Error(error.error || '提交失败');
+      }
+    } catch (error: any) {
+      setSubmitting(false);
+      alert(`提交失败：${error.message}`);
+    }
   };
 
   const updateScore = (key: DimensionKey, value: number) => {
