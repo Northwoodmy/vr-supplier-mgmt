@@ -183,7 +183,7 @@ export default function NewEvaluationPage() {
                   value={[scores[dim.key]]}
                   min={1}
                   max={5}
-                  step={0.5}
+                  step={0.1}
                   onValueChange={(values) => updateScore(dim.key, values[0])}
                   className="py-2"
                 />
