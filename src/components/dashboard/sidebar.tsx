@@ -4,19 +4,29 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/lib/auth-hooks';
+import {
+  LayoutDashboard,
+  Users,
+  FolderOpen,
+  TrendingUp,
+  Star,
+  ClipboardList,
+  Shield,
+  FileText,
+} from 'lucide-react';
 
 const navigation = [
-  { name: '仪表盘', href: '/', icon: '📊' },
-  { name: '供应商管理', href: '/suppliers', icon: '👥' },
-  { name: '项目管理', href: '/projects', icon: '📁' },
-  { name: '产能评估', href: '/capacity', icon: '📈' },
-  { name: '品质评估', href: '/evaluations', icon: '⭐' },
-  { name: '报表统计', href: '/reports', icon: '📋' },
+  { name: '仪表盘', href: '/', icon: LayoutDashboard },
+  { name: '供应商管理', href: '/suppliers', icon: Users },
+  { name: '项目管理', href: '/projects', icon: FolderOpen },
+  { name: '产能评估', href: '/capacity', icon: TrendingUp },
+  { name: '品质评估', href: '/evaluations', icon: Star },
+  { name: '报表统计', href: '/reports', icon: ClipboardList },
 ];
 
 const adminNavigation = [
-  { name: '用户管理', href: '/admin/users', icon: '🔐' },
-  { name: '审计日志', href: '/admin/audit-logs', icon: '📜' },
+  { name: '用户管理', href: '/admin/users', icon: Shield },
+  { name: '审计日志', href: '/admin/audit-logs', icon: FileText },
 ];
 
 export default function DashboardSidebar() {
@@ -40,6 +50,7 @@ export default function DashboardSidebar() {
       <nav className="flex-1 p-3 space-y-1 overflow-y-auto">
         {navigation.map((item) => {
           const isActive = pathname === item.href || pathname?.startsWith(item.href + '/');
+          const Icon = item.icon;
           return (
             <Link
               key={item.name}
@@ -51,7 +62,7 @@ export default function DashboardSidebar() {
                   : 'text-gray-600 hover:bg-sidebar-accent/50'
               )}
             >
-              <span>{item.icon}</span>
+              <Icon className="w-5 h-5" />
               {item.name}
             </Link>
           );
@@ -69,6 +80,7 @@ export default function DashboardSidebar() {
 
               if (!canAccess) return null;
 
+              const Icon = item.icon;
               return (
                 <Link
                   key={item.name}
@@ -80,7 +92,7 @@ export default function DashboardSidebar() {
                       : 'text-gray-600 hover:bg-sidebar-accent/50'
                   )}
                 >
-                  <span>{item.icon}</span>
+                  <Icon className="w-5 h-5" />
                   {item.name}
                 </Link>
               );

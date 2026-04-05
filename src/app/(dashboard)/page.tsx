@@ -2,41 +2,45 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useAuth } from '@/lib/auth-hooks';
+import { Users, FolderOpen, Star, TrendingUp } from 'lucide-react';
 
 export default function DashboardPage() {
   const { data: user } = useAuth();
 
   // 这些数据后续会从 API 获取
   const stats = [
-    { label: '供应商总数', value: '24', change: '+2', icon: '👥' },
-    { label: '进行中项目', value: '12', change: '+3', icon: '📁' },
-    { label: '待评估影片', value: '5', change: '-2', icon: '⭐' },
-    { label: '产能饱和度', value: '68%', change: '+5%', icon: '📈' },
+    { label: '供应商总数', value: '24', change: '+2', icon: Users },
+    { label: '进行中项目', value: '12', change: '+3', icon: FolderOpen },
+    { label: '待评估影片', value: '5', change: '-2', icon: Star },
+    { label: '产能饱和度', value: '68%', change: '+5%', icon: TrendingUp },
   ];
 
   return (
     <div className="space-y-6">
       {/* Stats overview */}
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
-        {stats.map((stat) => (
-          <Card key={stat.label} className="shadow-sm border-0">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium text-gray-600">
-                {stat.label}
-              </CardTitle>
-              <span className="text-2xl">{stat.icon}</span>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{stat.value}</div>
-              <p className="text-xs text-gray-500 mt-1">
-                <span className={stat.change.startsWith('+') ? 'text-green-600' : 'text-red-600'}>
-                  {stat.change}
-                </span>{' '}
-                较上月
-              </p>
-            </CardContent>
-          </Card>
-        ))}
+        {stats.map((stat) => {
+          const Icon = stat.icon;
+          return (
+            <Card key={stat.label} className="shadow-sm border-0">
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium text-gray-600">
+                  {stat.label}
+                </CardTitle>
+                <Icon className="w-6 h-6 text-gray-500" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">{stat.value}</div>
+                <p className="text-xs text-gray-500 mt-1">
+                  <span className={stat.change.startsWith('+') ? 'text-green-600' : 'text-red-600'}>
+                    {stat.change}
+                  </span>{' '}
+                  较上月
+                </p>
+              </CardContent>
+            </Card>
+          );
+        })}
       </div>
 
       {/* Recent activity */}
