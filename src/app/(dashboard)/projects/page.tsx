@@ -125,6 +125,7 @@ export default function ProjectsPage() {
                                  project.currentStage === 'review' ? 75 :
                                  project.currentStage === 'production' ? 50 :
                                  project.currentStage === 'pre_production' ? 25 : 10;
+                const supplierNames = project.suppliers?.map((s: any) => s.supplier.name).join('、') || '未分配';
 
                 return (
                   <div
@@ -137,8 +138,8 @@ export default function ProjectsPage() {
                       <div className="text-sm text-gray-500">{project.code}</div>
                     </div>
                     <div className="col-span-2 text-center">
-                      <span className="text-sm">
-                        {supplierCount > 0 ? `${supplierCount} 家供应商` : '未分配'}
+                      <span className="text-sm" title={supplierNames}>
+                        {supplierNames.length > 20 ? supplierNames.substring(0, 18) + '...' : supplierNames}
                       </span>
                     </div>
                     <div className="col-span-2 text-center">
