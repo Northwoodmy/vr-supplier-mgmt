@@ -6,7 +6,7 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
+  provider = "sqlite"
 }
 
 // ============================================
@@ -23,12 +23,31 @@ model User {
   status        String   @default("active") // active/suspended/deleted
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
-  lastLoginAt   DateTime?
+  lastLoginAt   DateTime? @map("last_login_at")
 
   roles         UserRole[]
   auditLogs     AuditLog[]
+  sessions      Session[]
   createdProjects Project[] @relation("ProjectCreator")
   createdSuppliers Supplier[] @relation("SupplierCreator")
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  createdAt    DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
 }
 
 model Role {
@@ -36,7 +55,7 @@ model Role {
   name        String   @unique // super_admin/admin/user
   displayName String
   description String?
-  permissions String[]
+  permissions String     // JSON string for SQLite
   users       UserRole[]
 }
 
@@ -58,7 +77,7 @@ model AuditLog {
   action    String   // CREATE/UPDATE/DELETE/LOGIN/LOGOUT/EXPORT
   resource  String   // supplier/project/evaluation/user
   resourceId String?
-  details   Json?
+  details   String?  // JSON string for SQLite
   ipAddress String?
   userAgent String?
   createdAt DateTime @default(now())
@@ -78,7 +97,7 @@ model Supplier {
   contactPhone    String?
   address         String?
   level           String   @default("B") // S/A/B/C
-  techStack       String[] // UE5/U3D/Both
+  techStack       String   // UE5/U3D/Both - comma separated
   description     String?
   status          String   @default("active") // active/inactive/blacklisted
   createdAt       DateTime @default(now())
@@ -219,7 +238,6 @@ model SupplierRating {
   id              String   @id @default(cuid())
   supplierId      String
   year            Int
-  quarter         Int?
   projectCount    Int      @default(0)
   avgQualityScore Float    @default(0.0)
   totalCost       Float    @default(0.0)
@@ -229,7 +247,7 @@ model SupplierRating {
 
   supplier Supplier @relation(fields: [supplierId], references: [id], onDelete: Cascade)
 
-  @@unique([supplierId, year, quarter])
+  @@unique([supplierId, year])
   @@index([supplierId])
   @@index([year])
 }
