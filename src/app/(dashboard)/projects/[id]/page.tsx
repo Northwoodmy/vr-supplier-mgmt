@@ -153,6 +153,9 @@ export default function ProjectDetailPage() {
             {statusConfig[project.status]?.label}
           </Badge>
           <Badge variant="outline">{project.currentStage === 'completed' ? '已完成' : '进行中'}</Badge>
+          <Button variant="outline" onClick={() => router.push(`/projects/${project.id}/edit`)}>
+            编辑
+          </Button>
           <Button variant="outline" onClick={() => router.push('/projects')}>
             返回列表
           </Button>
