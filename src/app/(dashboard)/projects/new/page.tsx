@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -8,9 +8,22 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
-import { trpc } from '@/lib/trpc';
-import { Plus, Trash2 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
+import { Plus, Trash2 } from 'lucide-react';
+
+interface Supplier {
+  id: string;
+  name: string;
+  level: string;
+  techStack: string;
+  status: string;
+}
+
+interface Saturation {
+  supplierId: string;
+  saturationRate: number;
+  status: string;
+}
 
 interface SupplierProjectFormData {
   id?: string;
@@ -21,23 +34,58 @@ interface SupplierProjectFormData {
   workloadShare: number;
 }
 
+const COMPLEXITY_OPTIONS = [
+  { value: 'simple', label: '简单', factor: '0.8' },
+  { value: 'medium', label: '中等', factor: '1.0' },
+  { value: 'complex', label: '复杂', factor: '1.3' },
+  { value: 'extreme', label: '极复杂', factor: '1.6' },
+];
+
+const STAGE_OPTIONS = [
+  { value: 'planning', label: '筹备中' },
+  { value: 'pre_production', label: '预制作' },
+  { value: 'production', label: '制作中' },
+  { value: 'review', label: '审核中' },
+  { value: 'delivery', label: '交付中' },
+  { value: 'paused', label: '已暂停' },
+];
+
+const STATUS_OPTIONS = [
+  { value: 'planning', label: '筹备中' },
+  { value: 'pre_production', label: '预制作' },
+  { value: 'production', label: '制作中' },
+  { value: 'review', label: '审核中' },
+  { value: 'delivery', label: '交付中' },
+  { value: 'completed', label: '已完成' },
+  { value: 'cancelled', label: '已取消' },
+];
+
 export default function NewProjectPage() {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [selectedSuppliers, setSelectedSuppliers] = useState<SupplierProjectFormData[]>([]);
+  const [suppliers, setSuppliers] = useState<Supplier[]>([]);
+  const [saturations, setSaturations] = useState<Saturation[]>([]);
 
-  const { data: suppliers = [] } = trpc.supplier.list.useQuery();
-  const { data: saturations = [] } = trpc.capacity.getAllSaturation.useQuery();
-
-  const createProject = trpc.project.create.useMutation({
-    onSuccess: () => {
-      router.push('/projects');
-    },
-    onError: (error) => {
-      setLoading(false);
-      alert(`创建失败：${error.message}`);
-    },
-  });
+  useEffect(() => {
+    async function fetchData() {
+      try {
+        const [suppliersRes, saturationsRes] = await Promise.all([
+          fetch('/api/suppliers'),
+          fetch('/api/capacity/saturations'),
+        ]);
+        if (suppliersRes.ok) {
+          setSuppliers(await suppliersRes.json());
+        }
+        if (saturationsRes.ok) {
+          setSaturations(await saturationsRes.json());
+        }
+      } catch (error) {
+        console.error('Failed to fetch data:', error);
+      }
+    }
+    fetchData();
+  }, []);
 
   const getSaturationStatus = (supplierId: string) => {
     return saturations.find(s => s.supplierId === supplierId);
@@ -75,16 +123,32 @@ export default function NewProjectPage() {
       startDate: formData.get('startDate') as string || '',
       endDate: formData.get('endDate') as string || '',
       expectedDeliveryDate: formData.get('expectedDeliveryDate') as string || '',
-      status: formData.get('status') as any,
-      currentStage: formData.get('currentStage') as any,
+      status: formData.get('status') as string,
+      currentStage: formData.get('currentStage') as string,
     };
 
     const validSuppliers = selectedSuppliers.filter(sp => sp.supplierId);
 
-    createProject.mutate({
-      project: projectData,
-      suppliers: validSuppliers.length > 0 ? validSuppliers : undefined,
-    });
+    try {
+      const res = await fetch('/api/projects', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          project: projectData,
+          suppliers: validSuppliers.length > 0 ? validSuppliers : undefined,
+        }),
+      });
+
+      if (res.ok) {
+        router.push('/projects');
+      } else {
+        const error = await res.json();
+        throw new Error(error.error || '创建失败');
+      }
+    } catch (error: any) {
+      alert(`创建失败：${error.message}`);
+      setLoading(false);
+    }
   };
 
   return (
