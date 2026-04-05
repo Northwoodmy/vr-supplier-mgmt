@@ -35,16 +35,6 @@ const complexityConfig: Record<string, { label: string; color: string }> = {
   extreme: { label: '极复杂', color: 'bg-red-100 text-red-700' },
 };
 
-const stageConfig: Record<string, { label: string }> = {
-  planning: { label: '筹备中' },
-  pre_production: { label: '预制作' },
-  production: { label: '制作中' },
-  review: { label: '审核中' },
-  delivery: { label: '交付中' },
-  completed: { label: '已完成' },
-  paused: { label: '已暂停' },
-};
-
 interface Project {
   id: string;
   name: string;
