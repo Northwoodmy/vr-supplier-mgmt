@@ -1,0 +1,235 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ============================================
+// 用户与权限模块
+// ============================================
+
+model User {
+  id            String   @id @default(cuid())
+  username      String   @unique
+  email         String   @unique
+  passwordHash  String
+  displayName   String?
+  avatar        String?
+  status        String   @default("active") // active/suspended/deleted
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  lastLoginAt   DateTime?
+
+  roles         UserRole[]
+  auditLogs     AuditLog[]
+  createdProjects Project[] @relation("ProjectCreator")
+  createdSuppliers Supplier[] @relation("SupplierCreator")
+}
+
+model Role {
+  id          String   @id @default(cuid())
+  name        String   @unique // super_admin/admin/user
+  displayName String
+  description String?
+  permissions String[]
+  users       UserRole[]
+}
+
+model UserRole {
+  userId     String
+  roleId     String
+  assignedBy String
+  assignedAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  role Role @relation(fields: [roleId], references: [id], onDelete: Cascade)
+
+  @@id([userId, roleId])
+}
+
+model AuditLog {
+  id        String   @id @default(cuid())
+  userId    String
+  action    String   // CREATE/UPDATE/DELETE/LOGIN/LOGOUT/EXPORT
+  resource  String   // supplier/project/evaluation/user
+  resourceId String?
+  details   Json?
+  ipAddress String?
+  userAgent String?
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id])
+}
+
+// ============================================
+// 供应商模块
+// ============================================
+
+model Supplier {
+  id              String   @id @default(cuid())
+  name            String
+  contactPerson   String?
+  contactEmail    String?
+  contactPhone    String?
+  address         String?
+  level           String   @default("B") // S/A/B/C
+  techStack       String[] // UE5/U3D/Both
+  description     String?
+  status          String   @default("active") // active/inactive/blacklisted
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  createdById     String
+
+  creator         User           @relation("SupplierCreator", fields: [createdById], references: [id])
+  teamMembers     TeamMember[]
+  capacity        SupplierCapacity?
+  projects        SupplierProject[]
+  qualityReviews  QualityReview[]
+  ratings         SupplierRating[]
+
+  @@index([level])
+  @@index([status])
+}
+
+model TeamMember {
+  id           String   @id @default(cuid())
+  supplierId   String
+  role         String   // UE5 工程师/U3D 工程师/美术师/动画师/特效师/项目经理
+  category     String   // engineering/art/animation/vfx/management
+  count        Int      @default(1)
+  seniorCount  Int      @default(0)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  supplier Supplier @relation(fields: [supplierId], references: [id], onDelete: Cascade)
+
+  @@index([supplierId])
+  @@index([category])
+}
+
+model SupplierCapacity {
+  id            String   @id @default(cuid())
+  supplierId    String   @unique
+  totalMembers  Int
+  capacityFactor Float   @default(0.8)
+  monthlyCapacity Float
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  supplier Supplier @relation(fields: [supplierId], references: [id], onDelete: Cascade)
+}
+
+// ============================================
+// 项目模块
+// ============================================
+
+model Project {
+  id            String   @id @default(cuid())
+  name          String
+  code          String   @unique // 项目编号
+  description   String?
+  budget        Float?
+  actualCost    Float?
+  startDate     DateTime?
+  endDate       DateTime?
+  expectedDeliveryDate DateTime?
+  status        String   @default("planning") // planning/pre_production/production/review/delivery/completed/cancelled
+  currentStage  String   @default("planning") // planning/pre_production/production/review/delivery/paused
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  createdById   String
+
+  creator         User           @relation("ProjectCreator", fields: [createdById], references: [id])
+  suppliers       SupplierProject[]
+  deliveries      ProjectDelivery[]
+  qualityReviews  QualityReview[]
+
+  @@index([status])
+  @@index([currentStage])
+}
+
+model SupplierProject {
+  id                String   @id @default(cuid())
+  supplierId        String
+  projectId         String
+  estimatedManDays  Int?
+  complexityLevel   String   @default("medium") // simple/medium/complex/extreme
+  currentStage      String   @default("planning") // planning/pre_production/production/review/delivery/paused
+  workloadShare     Float    @default(1.0) // 0-1
+  currentLoad       Float    @default(0.0) // 自动计算
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  supplier Supplier @relation(fields: [supplierId], references: [id], onDelete: Cascade)
+  project  Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@unique([supplierId, projectId])
+  @@index([supplierId])
+  @@index([projectId])
+}
+
+model ProjectDelivery {
+  id          String   @id @default(cuid())
+  projectId   String
+  version     String   @default("1.0")
+  description String?
+  deliverUrl  String?
+  fileSize    String?
+  status      String   @default("pending") // pending/reviewed/approved/rejected
+  feedback    String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@index([projectId])
+}
+
+// ============================================
+// 评估模块
+// ============================================
+
+model QualityReview {
+  id                String   @id @default(cuid())
+  projectId         String
+  supplierId        String
+  reviewerId        String
+  visualQuality     Float    // 1-5
+  animationSmoothness Float  // 1-5
+  vfxMatch          Float    // 1-5
+  audioQuality      Float    // 1-5
+  cameraWork        Float    // 1-5
+  storyNovelty      Float    // 1-5
+  totalScore        Float
+  comments          String?
+  status            String   @default("draft") // draft/submitted
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  project  Project  @relation(fields: [projectId], references: [id])
+  supplier Supplier @relation(fields: [supplierId], references: [id])
+}
+
+model SupplierRating {
+  id              String   @id @default(cuid())
+  supplierId      String
+  year            Int
+  quarter         Int?
+  projectCount    Int      @default(0)
+  avgQualityScore Float    @default(0.0)
+  totalCost       Float    @default(0.0)
+  costPerformance Float    @default(0.0)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  supplier Supplier @relation(fields: [supplierId], references: [id], onDelete: Cascade)
+
+  @@unique([supplierId, year, quarter])
+  @@index([supplierId])
+  @@index([year])
+}
