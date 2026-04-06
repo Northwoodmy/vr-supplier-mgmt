@@ -33,6 +33,21 @@ export default function NewSupplierPage() {
   const [loading, setLoading] = useState(false);
   const [teamMembers, setTeamMembers] = useState<TeamMemberFormData[]>([]);
 
+  // 受控组件状态
+  const [formData, setFormData] = useState({
+    name: '',
+    level: 'B',
+    techStack: 'UE5',
+    status: 'active',
+    description: '',
+    contactPerson: '',
+    contactEmail: '',
+    contactPhone: '',
+    address: '',
+    totalMembers: 0,
+    capacityFactor: '0.8',
+  });
+
   const createSupplier = trpc.supplier.create.useMutation({
     onSuccess: () => {
       router.push('/suppliers');
@@ -73,23 +88,21 @@ export default function NewSupplierPage() {
     e.preventDefault();
     setLoading(true);
 
-    const formData = new FormData(e.currentTarget);
-
     const supplierData = {
-      name: formData.get('name') as string,
-      level: formData.get('level') as 'S' | 'A' | 'B' | 'C',
-      techStack: formData.get('techStack') as string,
-      status: formData.get('status') as 'active' | 'inactive' | 'blacklisted',
-      description: formData.get('description') as string || undefined,
-      contactPerson: formData.get('contactPerson') as string || undefined,
-      contactEmail: formData.get('contactEmail') as string || undefined,
-      contactPhone: formData.get('contactPhone') as string || undefined,
-      address: formData.get('address') as string || undefined,
+      name: formData.name,
+      level: formData.level as 'S' | 'A' | 'B' | 'C',
+      techStack: formData.techStack,
+      status: formData.status as 'active' | 'inactive' | 'blacklisted',
+      description: formData.description || undefined,
+      contactPerson: formData.contactPerson || undefined,
+      contactEmail: formData.contactEmail || undefined,
+      contactPhone: formData.contactPhone || undefined,
+      address: formData.address || undefined,
     };
 
     const capacityData = {
-      totalMembers: parseInt(formData.get('totalMembers') as string),
-      capacityFactor: parseFloat(formData.get('capacityFactor') as string) || 0.8,
+      totalMembers: formData.totalMembers,
+      capacityFactor: parseFloat(formData.capacityFactor) || 0.8,
     };
 
     const validTeamMembers = teamMembers.filter(tm => tm.role && tm.count > 0);
@@ -121,13 +134,32 @@ export default function NewSupplierPage() {
             <div className="grid gap-4 md:grid-cols-2">
               <div className="space-y-2">
                 <Label htmlFor="name">供应商名称 *</Label>
-                <Input id="name" name="name" placeholder="请输入供应商名称" required />
+                <Input
+                  id="name"
+                  value={formData.name}
+                  onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
+                  placeholder="请输入供应商名称"
+                  required
+                />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="level">等级 *</Label>
-                <Select name="level" defaultValue="B">
+                <Select
+                  value={formData.level}
+                  onValueChange={(value) => setFormData(prev => ({ ...prev, level: value }))}
+                >
                   <SelectTrigger>
-                    <SelectValue />
+                    <SelectValue>
+                      {(value) => {
+                        const levelMap: Record<string, string> = {
+                          'S': 'S 级 - 战略合作伙伴',
+                          'A': 'A 级 - 优质供应商',
+                          'B': 'B 级 - 备选供应商',
+                          'C': 'C 级 - 淘汰中',
+                        };
+                        return levelMap[value] || value;
+                      }}
+                    </SelectValue>
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="S">S 级 - 战略合作伙伴</SelectItem>
@@ -139,9 +171,21 @@ export default function NewSupplierPage() {
               </div>
               <div className="space-y-2">
                 <Label htmlFor="techStack">技术栈 *</Label>
-                <Select name="techStack" defaultValue="UE5">
+                <Select
+                  value={formData.techStack}
+                  onValueChange={(value) => setFormData(prev => ({ ...prev, techStack: value }))}
+                >
                   <SelectTrigger>
-                    <SelectValue />
+                    <SelectValue>
+                      {(value) => {
+                        const techMap: Record<string, string> = {
+                          'UE5': 'UE5',
+                          'U3D': 'U3D',
+                          'Both': 'UE5 + U3D',
+                        };
+                        return techMap[value] || value;
+                      }}
+                    </SelectValue>
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="UE5">UE5</SelectItem>
@@ -152,9 +196,20 @@ export default function NewSupplierPage() {
               </div>
               <div className="space-y-2">
                 <Label htmlFor="status">状态</Label>
-                <Select name="status" defaultValue="active">
+                <Select
+                  value={formData.status}
+                  onValueChange={(value) => setFormData(prev => ({ ...prev, status: value }))}
+                >
                   <SelectTrigger>
-                    <SelectValue />
+                    <SelectValue>
+                      {(value) => {
+                        const statusMap: Record<string, string> = {
+                          'active': '活跃',
+                          'inactive': '停用',
+                        };
+                        return statusMap[value] || value;
+                      }}
+                    </SelectValue>
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="active">活跃</SelectItem>
@@ -167,7 +222,8 @@ export default function NewSupplierPage() {
               <Label htmlFor="description">描述</Label>
               <Textarea
                 id="description"
-                name="description"
+                value={formData.description}
+                onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
                 placeholder="请输入供应商描述"
                 rows={3}
               />
@@ -179,19 +235,40 @@ export default function NewSupplierPage() {
               <div className="grid gap-4 md:grid-cols-2">
                 <div className="space-y-2">
                   <Label htmlFor="contactPerson">联系人</Label>
-                  <Input id="contactPerson" name="contactPerson" placeholder="请输入联系人姓名" />
+                  <Input
+                    id="contactPerson"
+                    value={formData.contactPerson}
+                    onChange={(e) => setFormData(prev => ({ ...prev, contactPerson: e.target.value }))}
+                    placeholder="请输入联系人姓名"
+                  />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="contactEmail">邮箱</Label>
-                  <Input id="contactEmail" name="contactEmail" type="email" placeholder="请输入邮箱" />
+                  <Input
+                    id="contactEmail"
+                    value={formData.contactEmail}
+                    onChange={(e) => setFormData(prev => ({ ...prev, contactEmail: e.target.value }))}
+                    type="email"
+                    placeholder="请输入邮箱"
+                  />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="contactPhone">电话</Label>
-                  <Input id="contactPhone" name="contactPhone" placeholder="请输入电话号码" />
+                  <Input
+                    id="contactPhone"
+                    value={formData.contactPhone}
+                    onChange={(e) => setFormData(prev => ({ ...prev, contactPhone: e.target.value }))}
+                    placeholder="请输入电话号码"
+                  />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="address">地址</Label>
-                  <Input id="address" name="address" placeholder="请输入地址" />
+                  <Input
+                    id="address"
+                    value={formData.address}
+                    onChange={(e) => setFormData(prev => ({ ...prev, address: e.target.value }))}
+                    placeholder="请输入地址"
+                  />
                 </div>
               </div>
             </div>
@@ -202,19 +279,37 @@ export default function NewSupplierPage() {
               <div className="grid gap-4 md:grid-cols-2">
                 <div className="space-y-2">
                   <Label htmlFor="totalMembers">团队总人数 *</Label>
-                  <Input id="totalMembers" name="totalMembers" type="number" placeholder="请输入团队人数" required />
+                  <Input
+                    id="totalMembers"
+                    value={formData.totalMembers}
+                    onChange={(e) => setFormData(prev => ({ ...prev, totalMembers: parseInt(e.target.value) || 0 }))}
+                    type="number"
+                    placeholder="请输入团队人数"
+                    required
+                  />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="capacityFactor">产能系数</Label>
-                  <Select name="capacityFactor" defaultValue="0.8">
+                  <Select
+                    value={formData.capacityFactor}
+                    onValueChange={(value) => setFormData(prev => ({ ...prev, capacityFactor: value }))}
+                  >
                     <SelectTrigger>
-                      <SelectValue />
+                      <SelectValue>
+                        {(value) => {
+                          const factorMap: Record<string, string> = {
+                            '0.7': '0.7 - 小型团队 (<10 人) / 大型团队 (>50 人)',
+                            '0.75': '0.75 - 中型团队 (20-50 人)',
+                            '0.8': '0.8 - 标准团队 (10-20 人)',
+                          };
+                          return factorMap[value] || value;
+                        }}
+                      </SelectValue>
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="0.7">0.7 - 小型团队 (&lt;10 人)</SelectItem>
+                      <SelectItem value="0.7">0.7 - 小型团队 (&lt;10 人) / 大型团队 (&gt;50 人)</SelectItem>
                       <SelectItem value="0.75">0.75 - 中型团队 (20-50 人)</SelectItem>
                       <SelectItem value="0.8">0.8 - 标准团队 (10-20 人)</SelectItem>
-                      <SelectItem value="0.7">0.7 - 大型团队 (&gt;50 人)</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -235,7 +330,9 @@ export default function NewSupplierPage() {
                           onValueChange={(value) => updateTeamMember(index, 'role', value || '')}
                         >
                           <SelectTrigger>
-                            <SelectValue placeholder="选择角色" />
+                            <SelectValue placeholder="选择角色">
+                              {(value) => value || '选择角色'}
+                            </SelectValue>
                           </SelectTrigger>
                           <SelectContent>
                             {ROLE_OPTIONS.map((option) => (

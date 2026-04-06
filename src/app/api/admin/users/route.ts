@@ -48,6 +48,19 @@ export async function POST(request: Request) {
       );
     }
 
+    // 检查邮箱是否已被使用（如果提供了邮箱）
+    if (email && email.trim() !== '') {
+      const existingEmail = await prisma.user.findUnique({
+        where: { email: email.trim() },
+      });
+      if (existingEmail) {
+        return NextResponse.json(
+          { error: '邮箱已被使用' },
+          { status: 400 }
+        );
+      }
+    }
+
     // 加密密码
     const passwordHash = await hash(password, 10);
 
@@ -55,7 +68,7 @@ export async function POST(request: Request) {
     const user = await prisma.user.create({
       data: {
         username,
-        email,
+        email: (email && email.trim() !== '') ? email.trim() : null,
         passwordHash,
         displayName: displayName || username,
       },
@@ -70,6 +83,7 @@ export async function POST(request: Request) {
         data: roleIds.map((roleId: string) => ({
           userId: user.id,
           roleId,
+          assignedBy: 'system',
         })),
       });
     }
@@ -78,11 +92,21 @@ export async function POST(request: Request) {
     const userWithRoles = await prisma.user.findUnique({
       where: { id: user.id },
       include: {
-        roles: true,
+        roles: {
+          include: {
+            role: true,
+          },
+        },
       },
     });
 
-    return NextResponse.json(userWithRoles);
+    // Transform to flatten role info
+    const transformedUser = {
+      ...userWithRoles,
+      roles: userWithRoles?.roles.map((ur: any) => ur.role) || [],
+    };
+
+    return NextResponse.json(transformedUser);
   } catch (error) {
     console.error('Failed to create user:', error);
     return NextResponse.json(

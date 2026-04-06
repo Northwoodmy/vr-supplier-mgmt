@@ -13,8 +13,8 @@ interface Supplier {
   level: string;
   status: string;
   contactPerson: string;
-  email: string;
-  phone: string;
+  contactEmail: string;
+  contactPhone: string;
   address: string;
   description?: string;
   teamMembers: Array<{
@@ -87,9 +87,17 @@ export default function SupplierDetailPage() {
   const router = useRouter();
   const [supplier, setSupplier] = useState<Supplier | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [backLink, setBackLink] = useState('/suppliers');
 
   useEffect(() => {
     if (!params?.id) return;
+
+    // 检查是否有 from 参数，用于返回来源页面
+    const searchParams = new URLSearchParams(window.location.search);
+    const from = searchParams.get('from');
+    if (from === 'capacity') {
+      setBackLink('/capacity');
+    }
 
     async function fetchSupplier() {
       try {
@@ -155,7 +163,7 @@ export default function SupplierDetailPage() {
           <Button variant="outline" onClick={() => router.push(`/suppliers/${supplier.id}/edit`)}>
             编辑
           </Button>
-          <Button variant="outline" onClick={() => router.push('/suppliers')}>
+          <Button variant="outline" onClick={() => router.push(backLink)}>
             返回列表
           </Button>
         </div>
@@ -170,19 +178,19 @@ export default function SupplierDetailPage() {
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
             <div>
               <div className="text-sm text-gray-500">联系人</div>
-              <div className="font-medium">{supplier.contactPerson}</div>
+              <div className="font-medium">{supplier.contactPerson || '-'}</div>
             </div>
             <div>
               <div className="text-sm text-gray-500">邮箱</div>
-              <div className="font-medium">{supplier.email}</div>
+              <div className="font-medium">{supplier.contactEmail || '-'}</div>
             </div>
             <div>
               <div className="text-sm text-gray-500">电话</div>
-              <div className="font-medium">{supplier.phone}</div>
+              <div className="font-medium">{supplier.contactPhone || '-'}</div>
             </div>
             <div>
               <div className="text-sm text-gray-500">地址</div>
-              <div className="font-medium">{supplier.address}</div>
+              <div className="font-medium">{supplier.address || '-'}</div>
             </div>
           </div>
         </CardContent>

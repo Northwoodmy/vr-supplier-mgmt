@@ -226,8 +226,14 @@ export default function EvaluationsPage() {
                       <span className="text-sm text-gray-500">{new Date(evaluation.createdAt).toLocaleDateString('zh-CN')}</span>
                     </div>
                     <div className="col-span-1 text-center">
-                      <Badge variant={evaluation.status === 'submitted' ? 'default' : 'secondary'}>
-                        {evaluation.status === 'submitted' ? '已提交' : '草稿'}
+                      <Badge variant={
+                        evaluation.status === 'submitted' ? 'default' :
+                        evaluation.status === 'approved' ? 'destructive' :
+                        'secondary'
+                      }>
+                        {evaluation.status === 'submitted' ? '已提交' :
+                         evaluation.status === 'approved' ? '已通过' :
+                         '草稿'}
                       </Badge>
                     </div>
                   </div>

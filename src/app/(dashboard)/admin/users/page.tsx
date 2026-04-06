@@ -101,13 +101,21 @@ export default function UsersPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(data),
       });
+      const result = await res.json();
       if (res.ok) {
-        const newUser = await res.json();
-        setUsers(prev => [newUser, ...prev]);
+        // 重新获取用户列表以确保数据格式正确
+        const usersRes = await fetch('/api/admin/users');
+        if (usersRes.ok) {
+          setUsers(await usersRes.json());
+        }
         setIsCreateDialogOpen(false);
+        alert('用户创建成功！');
+      } else {
+        alert(`创建失败：${result.error || '未知错误'}`);
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Failed to create user:', error);
+      alert(`创建失败：${error.message || '未知错误'}`);
     } finally {
       setIsCreating(false);
     }
@@ -180,7 +188,7 @@ export default function UsersPage() {
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="email">邮箱</Label>
-                  <Input name="email" type="email" required />
+                  <Input name="email" type="email" />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="password">密码</Label>
@@ -194,7 +202,9 @@ export default function UsersPage() {
                   <Label>角色</Label>
                   <Select name="roleIds">
                     <SelectTrigger>
-                      <SelectValue placeholder="选择角色" />
+                      <SelectValue placeholder="选择角色">
+                        {(value) => roles.find(r => r.id === value)?.displayName || value}
+                      </SelectValue>
                     </SelectTrigger>
                     <SelectContent>
                       {roles.map((role) => (
@@ -248,11 +258,15 @@ export default function UsersPage() {
                     <TableCell>{user.displayName || '-'}</TableCell>
                     <TableCell>
                       <div className="flex gap-1 flex-wrap">
-                        {user.roles.map((role: any) => (
-                          <Badge key={role.id} variant="secondary">
-                            {role.displayName}
-                          </Badge>
-                        ))}
+                        {user.roles && user.roles.length > 0 ? (
+                          user.roles.map((role: any, idx: number) => (
+                            <Badge key={role?.id || `role-${user.id}-${idx}`} variant="secondary">
+                              {role?.displayName || role?.name || '-'}
+                            </Badge>
+                          ))
+                        ) : (
+                          <span className="text-gray-400">-</span>
+                        )}
                       </div>
                     </TableCell>
                     <TableCell>
@@ -331,11 +345,15 @@ export default function UsersPage() {
               <div>
                 <Label className="text-gray-500">角色</Label>
                 <div className="flex gap-1 flex-wrap mt-1">
-                  {selectedUser.roles.map((role: any) => (
-                    <Badge key={role.id} variant="secondary">
-                      {role.displayName}
-                    </Badge>
-                  ))}
+                  {selectedUser.roles && selectedUser.roles.length > 0 ? (
+                    selectedUser.roles.map((role: any, idx: number) => (
+                      <Badge key={role?.id || `role-${selectedUser.id}-${idx}`} variant="secondary">
+                        {role?.displayName || role?.name || '-'}
+                      </Badge>
+                    ))
+                  ) : (
+                    <span className="text-gray-400">-</span>
+                  )}
                 </div>
               </div>
               <div>

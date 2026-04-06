@@ -216,10 +216,12 @@ export default function NewProjectPage() {
                 <Label htmlFor="status">项目状态</Label>
                 <Select
                   value={formData.status}
-                  onValueChange={(value) => setFormData(prev => ({ ...prev, status: value }))}
+                  onValueChange={(value) => setFormData(prev => ({ ...prev, status: value || 'planning' }))}
                 >
                   <SelectTrigger>
-                    <SelectValue />
+                    <SelectValue placeholder="请选择项目状态">
+                      {(value) => STATUS_OPTIONS.find(opt => opt.value === value)?.label || value}
+                    </SelectValue>
                   </SelectTrigger>
                   <SelectContent>
                     {STATUS_OPTIONS.map((opt) => (
@@ -234,10 +236,12 @@ export default function NewProjectPage() {
                 <Label htmlFor="currentStage">当前阶段</Label>
                 <Select
                   value={formData.currentStage}
-                  onValueChange={(value) => setFormData(prev => ({ ...prev, currentStage: value }))}
+                  onValueChange={(value) => setFormData(prev => ({ ...prev, currentStage: value || 'planning' }))}
                 >
                   <SelectTrigger>
-                    <SelectValue />
+                    <SelectValue placeholder="请选择当前阶段">
+                      {(value) => STAGE_OPTIONS.find(opt => opt.value === value)?.label || value}
+                    </SelectValue>
                   </SelectTrigger>
                   <SelectContent>
                     {STAGE_OPTIONS.map((opt) => (
@@ -348,7 +352,12 @@ export default function NewProjectPage() {
                                   onValueChange={(value) => updateSupplier(index, 'supplierId', value)}
                                 >
                                   <SelectTrigger>
-                                    <SelectValue placeholder="选择供应商" />
+                                    <SelectValue placeholder="选择供应商">
+                                      {(value) => {
+                                        const supplier = suppliers.find(s => s.id === value);
+                                        return supplier ? `${supplier.name} (${supplier.level}级)` : value;
+                                      }}
+                                    </SelectValue>
                                   </SelectTrigger>
                                   <SelectContent>
                                     {suppliers.map((s: any) => (
@@ -375,7 +384,9 @@ export default function NewProjectPage() {
                                   onValueChange={(value: any) => updateSupplier(index, 'complexityLevel', value)}
                                 >
                                   <SelectTrigger>
-                                    <SelectValue />
+                                    <SelectValue>
+                                      {(value) => COMPLEXITY_OPTIONS.find(opt => opt.value === value)?.label || value}
+                                    </SelectValue>
                                   </SelectTrigger>
                                   <SelectContent>
                                     <SelectItem value="simple">简单 (0.8)</SelectItem>
@@ -392,7 +403,17 @@ export default function NewProjectPage() {
                                   onValueChange={(value) => updateSupplier(index, 'workloadShare', parseFloat(value || '1'))}
                                 >
                                   <SelectTrigger>
-                                    <SelectValue />
+                                    <SelectValue>
+                                      {(value) => {
+                                        const shareMap: Record<string, string> = {
+                                          '1': '100% 独占',
+                                          '0.5': '50% 共享',
+                                          '0.3': '30% 共享',
+                                          '0.25': '25% 共享',
+                                        };
+                                        return shareMap[value] || value;
+                                      }}
+                                    </SelectValue>
                                   </SelectTrigger>
                                   <SelectContent>
                                     <SelectItem value="1">100% 独占</SelectItem>

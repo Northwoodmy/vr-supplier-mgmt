@@ -13,6 +13,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { useRouter } from 'next/navigation';
 import { SaturationBadge } from '@/components/capacity/saturation-badge';
+import { useAuth } from '@/lib/auth-hooks';
 
 interface Supplier {
   id: string;
@@ -28,6 +29,11 @@ interface Saturation {
   saturationRate: number;
 }
 
+interface User {
+  id: string;
+  permissions?: string[];
+}
+
 const levelColors = {
   S: 'bg-purple-100 text-purple-800',
   A: 'bg-blue-100 text-blue-800',
@@ -37,12 +43,16 @@ const levelColors = {
 
 export default function SuppliersPage() {
   const router = useRouter();
+  const { data: currentUser } = useAuth();
   const [search, setSearch] = useState('');
   const [levelFilter, setLevelFilter] = useState('all');
   const [statusFilter, setStatusFilter] = useState('all');
   const [suppliers, setSuppliers] = useState<Supplier[]>([]);
   const [saturations, setSaturations] = useState<Saturation[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+
+  // 检查权限
+  const canDelete = currentUser?.permissions?.includes('supplier:delete');
 
   useEffect(() => {
     async function fetchData() {
@@ -68,6 +78,23 @@ export default function SuppliersPage() {
 
   const getSaturation = (supplierId: string) => {
     return saturations.find(s => s.supplierId === supplierId);
+  };
+
+  const handleDelete = async (id: string) => {
+    if (!confirm('确定要删除此供应商吗？')) return;
+    try {
+      const res = await fetch(`/api/suppliers/${id}`, { method: 'DELETE' });
+      const result = await res.json();
+      if (res.ok) {
+        setSuppliers(prev => prev.filter(s => s.id !== id));
+        alert('供应商已删除');
+      } else {
+        alert(`删除失败：${result.error || '未知错误'}`);
+      }
+    } catch (error) {
+      console.error('Failed to delete supplier:', error);
+      alert('删除失败：未知错误');
+    }
   };
 
   const filteredSuppliers = suppliers.filter(s => {
@@ -188,6 +215,17 @@ export default function SuppliersPage() {
                         <DropdownMenuItem onClick={() => router.push(`/suppliers/${supplier.id}/edit`)}>
                           编辑
                         </DropdownMenuItem>
+                        {canDelete && (
+                          <DropdownMenuItem
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleDelete(supplier.id);
+                            }}
+                            className="text-red-600"
+                          >
+                            删除
+                          </DropdownMenuItem>
+                        )}
                       </DropdownMenuContent>
                     </DropdownMenu>
                   </div>

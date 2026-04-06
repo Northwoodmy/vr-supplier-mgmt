@@ -18,6 +18,16 @@ const statusConfig: Record<string, { label: string; color: string }> = {
   cancelled: { label: '已取消', color: 'bg-red-100 text-red-700' },
 };
 
+const stageConfig: Record<string, { label: string }> = {
+  planning: { label: '筹备中' },
+  pre_production: { label: '预制作' },
+  production: { label: '制作中' },
+  review: { label: '审核中' },
+  delivery: { label: '交付中' },
+  completed: { label: '已完成' },
+  paused: { label: '已暂停' },
+};
+
 const stageProgress: Record<string, number> = {
   planning: 10,
   pre_production: 25,
@@ -417,31 +427,35 @@ export default function ProjectDetailPage() {
                   <p className="text-xs text-gray-500 mt-1">平均分数（基于 {evaluationCount} 个评估）</p>
                 </div>
               </div>
-              {project.qualityReviews.map((review) => (
-                <div
-                  key={review.id}
-                  className="flex items-center justify-between p-4 border rounded-lg"
-                >
-                  <div className="flex-1">
-                    <div className="flex items-center gap-2">
-                      <span className="font-medium">{review.supplier.name}</span>
-                      <Badge variant={review.status === 'submitted' ? 'default' : 'secondary'}>
-                        {review.status === 'submitted' ? '已提交' : '草稿'}
-                      </Badge>
+              {project.qualityReviews.map((review) => {
+                const statusLabel = review.status === 'submitted' ? '已提交' : review.status === 'approved' ? '已通过' : review.status === 'rejected' ? '已拒绝' : '草稿';
+                const statusVariant = review.status === 'submitted' ? 'default' : review.status === 'approved' ? 'destructive' : review.status === 'rejected' ? 'destructive' : 'secondary';
+                return (
+                  <div
+                    key={review.id}
+                    className="flex items-center justify-between p-4 border rounded-lg"
+                  >
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2">
+                        <span className="font-medium">{review.supplier.name}</span>
+                        <Badge variant={statusVariant}>
+                          {statusLabel}
+                        </Badge>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-4">
+                      <div className="text-xl font-bold text-primary">{review.totalScore.toFixed(2)}</div>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => router.push(`/evaluations/${review.id}`)}
+                      >
+                        查看详情
+                      </Button>
                     </div>
                   </div>
-                  <div className="flex items-center gap-4">
-                    <div className="text-xl font-bold text-primary">{review.totalScore.toFixed(2)}</div>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => router.push(`/evaluations/${review.id}`)}
-                    >
-                      查看详情
-                    </Button>
-                  </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </CardContent>
         </Card>
@@ -449,13 +463,3 @@ export default function ProjectDetailPage() {
     </div>
   );
 }
-
-const stageConfig: Record<string, { label: string }> = {
-  planning: { label: '筹备中' },
-  pre_production: { label: '预制作' },
-  production: { label: '制作中' },
-  review: { label: '审核中' },
-  delivery: { label: '交付中' },
-  completed: { label: '已完成' },
-  paused: { label: '已暂停' },
-};

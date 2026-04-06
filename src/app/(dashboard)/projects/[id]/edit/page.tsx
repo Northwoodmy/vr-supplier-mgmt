@@ -185,7 +185,9 @@ export default function EditProjectPage() {
                   onValueChange={(value) => updateField('status', value)}
                 >
                   <SelectTrigger>
-                    <SelectValue />
+                    <SelectValue>
+                      {(value) => statusOptions.find(opt => opt.value === value)?.label || value}
+                    </SelectValue>
                   </SelectTrigger>
                   <SelectContent>
                     {statusOptions.map((opt) => (
@@ -204,7 +206,9 @@ export default function EditProjectPage() {
                   onValueChange={(value) => updateField('currentStage', value)}
                 >
                   <SelectTrigger>
-                    <SelectValue />
+                    <SelectValue>
+                      {(value) => stageOptions.find(opt => opt.value === value)?.label || value}
+                    </SelectValue>
                   </SelectTrigger>
                   <SelectContent>
                     {stageOptions.map((opt) => (

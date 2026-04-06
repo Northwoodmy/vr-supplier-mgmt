@@ -128,7 +128,7 @@ export default function CapacityPage() {
                 <div
                   key={supplier.supplierId}
                   className="grid md:grid-cols-12 gap-4 items-center py-4 border-b last:border-0 hover:bg-gray-50 rounded-lg px-2 -mx-2 cursor-pointer"
-                  onClick={() => router.push(`/suppliers/${supplier.supplierId}`)}
+                  onClick={() => router.push(`/suppliers/${supplier.supplierId}?from=capacity`)}
                 >
                   <div className="col-span-4">
                     <div className="font-medium">{supplier.supplierName}</div>

@@ -57,6 +57,7 @@ export default function EvaluationDetailPage() {
   const params = useParams();
   const [evaluation, setEvaluation] = useState<Evaluation | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [updating, setUpdating] = useState(false);
 
   useEffect(() => {
     if (!params?.id) return;
@@ -75,6 +76,32 @@ export default function EvaluationDetailPage() {
     }
     fetchEvaluation();
   }, [params?.id]);
+
+  const updateStatus = async (newStatus: 'approved' | 'rejected') => {
+    if (!evaluation) return;
+
+    setUpdating(true);
+    try {
+      const res = await fetch(`/api/evaluations/${params.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: newStatus }),
+      });
+
+      if (res.ok) {
+        const updated = await res.json();
+        setEvaluation(updated);
+        alert('状态已更新');
+      } else {
+        const error = await res.json();
+        throw new Error(error.error || '更新失败');
+      }
+    } catch (error: any) {
+      alert(`更新失败：${error.message}`);
+    } finally {
+      setUpdating(false);
+    }
+  };
 
   if (isLoading) {
     return (
@@ -218,6 +245,33 @@ export default function EvaluationDetailPage() {
           </CardHeader>
           <CardContent>
             <p className="text-gray-600 whitespace-pre-wrap">{evaluation.comments}</p>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Status Update Actions */}
+      {evaluation.status === 'submitted' && (
+        <Card>
+          <CardHeader>
+            <CardTitle>审批操作</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="flex items-center gap-4">
+              <Button
+                onClick={() => updateStatus('approved')}
+                disabled={updating}
+                className="bg-green-600 hover:bg-green-700"
+              >
+                {updating ? '处理中...' : '通过'}
+              </Button>
+              <Button
+                onClick={() => updateStatus('rejected')}
+                disabled={updating}
+                variant="destructive"
+              >
+                {updating ? '处理中...' : '拒绝'}
+              </Button>
+            </div>
           </CardContent>
         </Card>
       )}

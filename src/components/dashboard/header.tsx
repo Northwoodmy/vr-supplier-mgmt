@@ -10,12 +10,19 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { useLogout } from '@/lib/auth-hooks';
+import { useAuth, useLogout } from '@/lib/auth-hooks';
 
 export default function DashboardHeader() {
   const router = useRouter();
-
+  const { data: user } = useAuth();
   const logoutMutation = useLogout();
+
+  // 获取用户头像首字母
+  const userInitial = user?.displayName?.[0] || user?.username?.[0] || 'U';
+
+  // 检查权限
+  const canManageUsers = user?.permissions?.includes('user:manage');
+  const canViewAuditLogs = user?.permissions?.includes('audit:read');
 
   const handleLogout = () => {
     logoutMutation.mutate();
@@ -36,24 +43,28 @@ export default function DashboardHeader() {
                 {...props}
                 className="w-10 h-10 rounded-full bg-purple-100 flex items-center justify-center hover:bg-purple-200 transition-colors"
               >
-                <span className="text-purple-700 font-medium text-sm">A</span>
+                <span className="text-purple-700 font-medium text-sm">{userInitial}</span>
               </button>
             )}
           />
           <DropdownMenuContent align="end" className="w-56">
             <DropdownMenuLabel>
               <div className="flex flex-col space-y-1">
-                <p className="text-sm font-medium">管理员</p>
-                <p className="text-xs text-gray-500">admin@example.com</p>
+                <p className="text-sm font-medium">{user?.displayName || user?.username || '用户'}</p>
+                <p className="text-xs text-gray-500">{user?.email || user?.username || ''}</p>
               </div>
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
-            <DropdownMenuItem onClick={() => router.push('/admin/users')}>
-              用户管理
-            </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => router.push('/admin/audit-logs')}>
-              审计日志
-            </DropdownMenuItem>
+            {canManageUsers && (
+              <DropdownMenuItem onClick={() => router.push('/admin/users')}>
+                用户管理
+              </DropdownMenuItem>
+            )}
+            {canViewAuditLogs && (
+              <DropdownMenuItem onClick={() => router.push('/admin/audit-logs')}>
+                审计日志
+              </DropdownMenuItem>
+            )}
             <DropdownMenuSeparator />
             <DropdownMenuItem onClick={handleLogout}>
               退出登录
