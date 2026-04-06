@@ -14,6 +14,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { useAuth } from '@/lib/auth-hooks';
 
 const statusOptions = [
   { value: 'planning', label: '筹备中' },
@@ -53,6 +54,7 @@ interface Project {
 export default function EditProjectPage() {
   const router = useRouter();
   const params = useParams();
+  const { data: currentUser } = useAuth();
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [formData, setFormData] = useState<Project>({
@@ -69,6 +71,9 @@ export default function EditProjectPage() {
     expectedDeliveryDate: '',
     actualDeliveryDate: undefined,
   });
+
+  // 检查权限
+  const canViewCost = currentUser?.permissions?.includes('project:manage');
 
   useEffect(() => {
     if (!params?.id) return;
@@ -233,34 +238,36 @@ export default function EditProjectPage() {
           </CardContent>
         </Card>
 
-        <Card className="mt-6">
-          <CardHeader>
-            <CardTitle>预算与成本</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="grid gap-4 md:grid-cols-2">
-              <div className="space-y-2">
-                <Label htmlFor="budget">预算（元）</Label>
-                <Input
-                  id="budget"
-                  type="number"
-                  value={formData.budget}
-                  onChange={(e) => updateField('budget', parseFloat(e.target.value) || 0)}
-                />
-              </div>
+        {canViewCost && (
+          <Card className="mt-6">
+            <CardHeader>
+              <CardTitle>预算与成本</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid gap-4 md:grid-cols-2">
+                <div className="space-y-2">
+                  <Label htmlFor="budget">预算（元）</Label>
+                  <Input
+                    id="budget"
+                    type="number"
+                    value={formData.budget}
+                    onChange={(e) => updateField('budget', parseFloat(e.target.value) || 0)}
+                  />
+                </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="actualCost">实际成本（元）</Label>
-                <Input
-                  id="actualCost"
-                  type="number"
-                  value={formData.actualCost || ''}
-                  onChange={(e) => updateField('actualCost', e.target.value ? parseFloat(e.target.value) : undefined)}
-                />
+                <div className="space-y-2">
+                  <Label htmlFor="actualCost">实际成本（元）</Label>
+                  <Input
+                    id="actualCost"
+                    type="number"
+                    value={formData.actualCost || ''}
+                    onChange={(e) => updateField('actualCost', e.target.value ? parseFloat(e.target.value) : undefined)}
+                  />
+                </div>
               </div>
-            </div>
-          </CardContent>
-        </Card>
+            </CardContent>
+          </Card>
+        )}
 
         <Card className="mt-6">
           <CardHeader>

@@ -1,5 +1,6 @@
 'use client';
 
+import { useAuth } from '@/lib/auth-hooks';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -29,10 +30,23 @@ const levelColors = {
 };
 
 export default function ReportsPage() {
-  const handleExport = () => {
-    // TODO: 导出 Excel
-    alert('导出功能开发中...');
-  };
+  const { data: currentUser } = useAuth();
+
+  // 检查权限
+  const canViewReport = currentUser?.permissions?.includes('report:view');
+  const canExport = currentUser?.permissions?.includes('report:export');
+
+  if (!canViewReport) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <Card>
+          <CardContent className="p-6">
+            <p className="text-gray-500">无权访问此页面</p>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -40,23 +54,16 @@ export default function ReportsPage() {
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-semibold text-gray-900">报表统计</h1>
         <div className="flex gap-2">
-          <Button variant="outline" onClick={handleExport}>
-            导出 Excel
-          </Button>
+          {canExport && (
+            <Button variant="outline" onClick={() => alert('导出功能开发中...')}>
+              导出 Excel
+            </Button>
+          )}
         </div>
       </div>
 
       {/* Stats Overview */}
       <div className="grid gap-6 md:grid-cols-4">
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-gray-600">年度总支出</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">¥1,350 万</div>
-            <p className="text-xs text-gray-500 mt-1">较上年 +12%</p>
-          </CardContent>
-        </Card>
         <Card>
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium text-gray-600">合作项目数</CardTitle>
@@ -100,7 +107,6 @@ export default function ReportsPage() {
                 <TableHead className="text-center">等级</TableHead>
                 <TableHead className="text-center">项目数</TableHead>
                 <TableHead className="text-center">平均分</TableHead>
-                <TableHead className="text-center">总费用 (万)</TableHead>
                 <TableHead className="text-center">性价比</TableHead>
               </TableRow>
             </TableHeader>
@@ -129,7 +135,6 @@ export default function ReportsPage() {
                       <span className="text-xs text-gray-500">/ 5.0</span>
                     </div>
                   </TableCell>
-                  <TableCell className="text-center">¥{item.totalCost}</TableCell>
                   <TableCell className="text-center">
                     <span className="text-sm font-medium">{item.costPerformance.toFixed(3)}</span>
                   </TableCell>

@@ -10,6 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { Plus, Trash2 } from 'lucide-react';
+import { useAuth } from '@/lib/auth-hooks';
 
 interface Supplier {
   id: string;
@@ -75,6 +76,7 @@ interface ProjectFormData {
 
 export default function NewProjectPage() {
   const router = useRouter();
+  const { data: currentUser } = useAuth();
   const [loading, setLoading] = useState(false);
   const [selectedSuppliers, setSelectedSuppliers] = useState<SupplierProjectFormData[]>([]);
   const [suppliers, setSuppliers] = useState<Supplier[]>([]);
@@ -91,6 +93,9 @@ export default function NewProjectPage() {
     endDate: '',
     expectedDeliveryDate: '',
   });
+
+  // 检查权限
+  const canViewCost = currentUser?.permissions?.includes('project:manage');
 
   useEffect(() => {
     async function fetchData() {
@@ -266,29 +271,34 @@ export default function NewProjectPage() {
             </div>
 
             {/* 预算和周期 */}
+            {canViewCost && (
+              <div className="grid gap-4 md:grid-cols-3">
+                <div className="space-y-2">
+                  <Label htmlFor="budget">预算（元）</Label>
+                  <Input
+                    id="budget"
+                    value={formData.budget}
+                    onChange={(e) => setFormData(prev => ({ ...prev, budget: e.target.value }))}
+                    type="number"
+                    placeholder="0"
+                    step="0.01"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="actualCost">实际成本（元）</Label>
+                  <Input
+                    id="actualCost"
+                    value={formData.actualCost}
+                    onChange={(e) => setFormData(prev => ({ ...prev, actualCost: e.target.value }))}
+                    type="number"
+                    placeholder="0"
+                    step="0.01"
+                  />
+                </div>
+              </div>
+            )}
+
             <div className="grid gap-4 md:grid-cols-3">
-              <div className="space-y-2">
-                <Label htmlFor="budget">预算（元）</Label>
-                <Input
-                  id="budget"
-                  value={formData.budget}
-                  onChange={(e) => setFormData(prev => ({ ...prev, budget: e.target.value }))}
-                  type="number"
-                  placeholder="0"
-                  step="0.01"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="actualCost">实际成本（元）</Label>
-                <Input
-                  id="actualCost"
-                  value={formData.actualCost}
-                  onChange={(e) => setFormData(prev => ({ ...prev, actualCost: e.target.value }))}
-                  type="number"
-                  placeholder="0"
-                  step="0.01"
-                />
-              </div>
               <div className="space-y-2">
                 <Label htmlFor="expectedDeliveryDate">预计交付日期</Label>
                 <Input
@@ -298,7 +308,6 @@ export default function NewProjectPage() {
                   type="date"
                 />
               </div>
-            </div>
 
             <div className="grid gap-4 md:grid-cols-2">
               <div className="space-y-2">

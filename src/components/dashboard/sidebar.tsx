@@ -34,7 +34,14 @@ export default function DashboardSidebar() {
   const { data: user } = useAuth();
   const canManageUsers = user?.permissions?.includes('user:manage');
   const canViewAudit = user?.permissions?.includes('audit:view');
+  const canViewReport = user?.permissions?.includes('report:view');
   const showAdmin = canManageUsers || canViewAudit;
+
+  // 根据权限过滤导航菜单
+  const filteredNavigation = navigation.filter((item) => {
+    if (item.href === '/reports') return canViewReport;
+    return true;
+  });
 
   return (
     <div className="flex flex-col h-full bg-sidebar border-r">
@@ -48,7 +55,7 @@ export default function DashboardSidebar() {
 
       {/* Navigation */}
       <nav className="flex-1 p-3 space-y-1 overflow-y-auto">
-        {navigation.map((item) => {
+        {filteredNavigation.map((item) => {
           const isActive = pathname === item.href || pathname?.startsWith(item.href + '/');
           const Icon = item.icon;
           return (

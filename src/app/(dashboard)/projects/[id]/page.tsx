@@ -7,6 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { Calendar, Clock, Users, FolderOpen, Star, FileText } from 'lucide-react';
+import { useAuth } from '@/lib/auth-hooks';
 
 const statusConfig: Record<string, { label: string; color: string }> = {
   planning: { label: '筹备中', color: 'bg-gray-100 text-gray-700' },
@@ -93,8 +94,12 @@ interface Project {
 export default function ProjectDetailPage() {
   const router = useRouter();
   const params = useParams();
+  const { data: currentUser } = useAuth();
   const [project, setProject] = useState<Project | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+
+  // 检查权限
+  const canViewCost = currentUser?.permissions?.includes('project:manage');
 
   useEffect(() => {
     if (!params?.id) return;
@@ -195,20 +200,22 @@ export default function ProjectDetailPage() {
 
       {/* Key Stats */}
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
-        <Card>
-          <CardHeader className="pb-2 flex flex-row items-center justify-between space-y-0">
-            <CardTitle className="text-sm font-medium text-gray-600">预算</CardTitle>
-            <FileText className="w-4 h-4 text-gray-500" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">¥{(project.budget / 10000).toFixed(1)}万</div>
-            {project.actualCost && (
-              <p className="text-xs text-gray-500 mt-1">
-                实际：¥{(project.actualCost / 10000).toFixed(1)}万
-              </p>
-            )}
-          </CardContent>
-        </Card>
+        {canViewCost && (
+          <Card>
+            <CardHeader className="pb-2 flex flex-row items-center justify-between space-y-0">
+              <CardTitle className="text-sm font-medium text-gray-600">预算</CardTitle>
+              <FileText className="w-4 h-4 text-gray-500" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">¥{(project.budget / 10000).toFixed(1)}万</div>
+              {project.actualCost && (
+                <p className="text-xs text-gray-500 mt-1">
+                  实际：¥{(project.actualCost / 10000).toFixed(1)}万
+                </p>
+              )}
+            </CardContent>
+          </Card>
+        )}
         <Card>
           <CardHeader className="pb-2 flex flex-row items-center justify-between space-y-0">
             <CardTitle className="text-sm font-medium text-gray-600">工期</CardTitle>

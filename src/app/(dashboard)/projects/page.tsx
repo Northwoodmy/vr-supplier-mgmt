@@ -12,6 +12,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { useRouter } from 'next/navigation';
+import { useAuth } from '@/lib/auth-hooks';
 
 interface Project {
   id: string;
@@ -35,10 +36,14 @@ const statusConfig = {
 
 export default function ProjectsPage() {
   const router = useRouter();
+  const { data: currentUser } = useAuth();
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [projects, setProjects] = useState<Project[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+
+  // 检查权限
+  const canViewCost = currentUser?.permissions?.includes('project:manage');
 
   useEffect(() => {
     async function fetchData() {
@@ -103,8 +108,8 @@ export default function ProjectsPage() {
             <div className="hidden md:grid md:grid-cols-12 gap-4 text-sm font-medium text-gray-500 p-4 border-b">
               <div className="col-span-4">项目信息</div>
               <div className="col-span-2 text-center">供应商</div>
-              <div className="col-span-2 text-center">预算</div>
-              <div className="col-span-2 text-center">进度</div>
+              {canViewCost && <div className="col-span-2 text-center">预算</div>}
+              <div className={`text-center ${canViewCost ? 'col-span-2' : 'col-span-4'}`}>进度</div>
               <div className="col-span-2 text-center">状态</div>
             </div>
 
@@ -142,12 +147,14 @@ export default function ProjectsPage() {
                         {supplierNames.length > 20 ? supplierNames.substring(0, 18) + '...' : supplierNames}
                       </span>
                     </div>
-                    <div className="col-span-2 text-center">
-                      <span className="text-sm">
-                        {project.budget ? `¥${(project.budget / 10000).toFixed(0)}万` : '-'}
-                      </span>
-                    </div>
-                    <div className="col-span-2">
+                    {canViewCost && (
+                      <div className="col-span-2 text-center">
+                        <span className="text-sm">
+                          {project.budget ? `¥${(project.budget / 10000).toFixed(0)}万` : '-'}
+                        </span>
+                      </div>
+                    )}
+                    <div className={canViewCost ? "col-span-2" : "col-span-4"}>
                       <div className="flex items-center gap-2">
                         <div className="flex-1 h-2 bg-gray-100 rounded-full overflow-hidden">
                           <div
