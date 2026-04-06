@@ -131,6 +131,24 @@ export default function SupplierDetailPage() {
 
   // 检查权限
   const canManage = currentUser?.permissions?.includes('supplier:manage');
+  const canDelete = currentUser?.permissions?.includes('supplier:delete');
+
+  const handleDelete = async () => {
+    if (!confirm('确定要删除此供应商吗？')) return;
+    try {
+      const res = await fetch(`/api/suppliers/${params.id}`, { method: 'DELETE' });
+      const result = await res.json();
+      if (res.ok) {
+        alert('供应商已删除');
+        router.push(backLink);
+      } else {
+        alert(`删除失败：${result.error || '未知错误'}`);
+      }
+    } catch (error) {
+      console.error('Failed to delete supplier:', error);
+      alert('删除失败：未知错误');
+    }
+  };
 
   useEffect(() => {
     if (!params?.id) return;
@@ -226,6 +244,11 @@ export default function SupplierDetailPage() {
           <Button variant="outline" onClick={() => router.push(`/suppliers/${supplier.id}/edit`)}>
             编辑
           </Button>
+          {canDelete && (
+            <Button variant="destructive" onClick={handleDelete}>
+              删除
+            </Button>
+          )}
           <Button variant="outline" onClick={() => router.push(backLink)}>
             返回列表
           </Button>

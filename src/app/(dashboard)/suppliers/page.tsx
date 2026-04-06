@@ -259,6 +259,15 @@ export default function SuppliersPage() {
                     >
                       详情
                     </Button>
+                    {canDelete && (
+                      <Button
+                        size="sm"
+                        variant="destructive"
+                        onClick={() => handleDelete(supplier.id)}
+                      >
+                        删除
+                      </Button>
+                    )}
                   </div>
                 </CardContent>
               </Card>
