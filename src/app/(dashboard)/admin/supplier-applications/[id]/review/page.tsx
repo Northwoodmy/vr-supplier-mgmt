@@ -7,14 +7,8 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
 import { useAuth } from '@/lib/auth-hooks';
+import { ChevronDownIcon } from 'lucide-react';
 
 interface Application {
   id: string;
@@ -333,15 +327,18 @@ export default function ReviewApplicationPage() {
           <CardContent className="space-y-4">
             <div className="space-y-2">
               <Label>审核结果</Label>
-              <Select value={documentResult} onValueChange={(value) => setDocumentResult(value || '')}>
-                <SelectTrigger>
-                  <SelectValue placeholder="请选择审核结果" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="through">通过</SelectItem>
-                  <SelectItem value="failed">不通过</SelectItem>
-                </SelectContent>
-              </Select>
+              <div className="relative w-fit">
+                <select
+                  value={documentResult}
+                  onChange={(e) => setDocumentResult(e.target.value)}
+                  className="flex min-w-[200px] items-center justify-between gap-1.5 rounded-lg border border-input bg-transparent py-2 pr-8 pl-3 text-sm outline-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/50 appearance-none cursor-pointer"
+                >
+                  <option value="">请选择审核结果</option>
+                  <option value="through">通过</option>
+                  <option value="failed">不通过</option>
+                </select>
+                <ChevronDownIcon className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
+              </div>
             </div>
             <div className="space-y-2">
               <Label htmlFor="documentComments">审核意见</Label>
@@ -406,81 +403,99 @@ export default function ReviewApplicationPage() {
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label>视觉质量 (25%)</Label>
-                    <Select onValueChange={(v: string | null) => setSampleScores(s => ({ ...s, visualQuality: parseFloat(v || '0') }))}>
-                      <SelectTrigger>
-                        <SelectValue placeholder="评分 (1-5)" />
-                      </SelectTrigger>
-                      <SelectContent>
+                    <div className="relative w-fit">
+                      <select
+                        value={sampleScores.visualQuality || ''}
+                        onChange={(e) => setSampleScores(s => ({ ...s, visualQuality: parseFloat(e.target.value) }))}
+                        className="flex min-w-[150px] items-center justify-between gap-1.5 rounded-lg border border-input bg-transparent py-2 pr-8 pl-3 text-sm outline-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/50 appearance-none cursor-pointer"
+                      >
+                        <option value="">评分 (1-5)</option>
                         {[1, 2, 3, 4, 5].map(n => (
-                          <SelectItem key={n} value={n.toString()}>{n} 分</SelectItem>
+                          <option key={n} value={n}>{n} 分</option>
                         ))}
-                      </SelectContent>
-                    </Select>
+                      </select>
+                      <ChevronDownIcon className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
+                    </div>
                   </div>
                   <div className="space-y-2">
                     <Label>技术实现 (20%)</Label>
-                    <Select onValueChange={(v: string | null) => setSampleScores(s => ({ ...s, technicalImplementation: parseFloat(v || '0') }))}>
-                      <SelectTrigger>
-                        <SelectValue placeholder="评分 (1-5)" />
-                      </SelectTrigger>
-                      <SelectContent>
+                    <div className="relative w-fit">
+                      <select
+                        value={sampleScores.technicalImplementation || ''}
+                        onChange={(e) => setSampleScores(s => ({ ...s, technicalImplementation: parseFloat(e.target.value) }))}
+                        className="flex min-w-[150px] items-center justify-between gap-1.5 rounded-lg border border-input bg-transparent py-2 pr-8 pl-3 text-sm outline-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/50 appearance-none cursor-pointer"
+                      >
+                        <option value="">评分 (1-5)</option>
                         {[1, 2, 3, 4, 5].map(n => (
-                          <SelectItem key={n} value={n.toString()}>{n} 分</SelectItem>
+                          <option key={n} value={n}>{n} 分</option>
                         ))}
-                      </SelectContent>
-                    </Select>
+                      </select>
+                      <ChevronDownIcon className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
+                    </div>
                   </div>
                   <div className="space-y-2">
                     <Label>创意叙事 (20%)</Label>
-                    <Select onValueChange={(v: string | null) => setSampleScores(s => ({ ...s, creativity: parseFloat(v || '0') }))}>
-                      <SelectTrigger>
-                        <SelectValue placeholder="评分 (1-5)" />
-                      </SelectTrigger>
-                      <SelectContent>
+                    <div className="relative w-fit">
+                      <select
+                        value={sampleScores.creativity || ''}
+                        onChange={(e) => setSampleScores(s => ({ ...s, creativity: parseFloat(e.target.value) }))}
+                        className="flex min-w-[150px] items-center justify-between gap-1.5 rounded-lg border border-input bg-transparent py-2 pr-8 pl-3 text-sm outline-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/50 appearance-none cursor-pointer"
+                      >
+                        <option value="">评分 (1-5)</option>
                         {[1, 2, 3, 4, 5].map(n => (
-                          <SelectItem key={n} value={n.toString()}>{n} 分</SelectItem>
+                          <option key={n} value={n}>{n} 分</option>
                         ))}
-                      </SelectContent>
-                    </Select>
+                      </select>
+                      <ChevronDownIcon className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
+                    </div>
                   </div>
                   <div className="space-y-2">
                     <Label>音频设计 (15%)</Label>
-                    <Select onValueChange={(v: string | null) => setSampleScores(s => ({ ...s, audioDesign: parseFloat(v || '0') }))}>
-                      <SelectTrigger>
-                        <SelectValue placeholder="评分 (1-5)" />
-                      </SelectTrigger>
-                      <SelectContent>
+                    <div className="relative w-fit">
+                      <select
+                        value={sampleScores.audioDesign || ''}
+                        onChange={(e) => setSampleScores(s => ({ ...s, audioDesign: parseFloat(e.target.value) }))}
+                        className="flex min-w-[150px] items-center justify-between gap-1.5 rounded-lg border border-input bg-transparent py-2 pr-8 pl-3 text-sm outline-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/50 appearance-none cursor-pointer"
+                      >
+                        <option value="">评分 (1-5)</option>
                         {[1, 2, 3, 4, 5].map(n => (
-                          <SelectItem key={n} value={n.toString()}>{n} 分</SelectItem>
+                          <option key={n} value={n}>{n} 分</option>
                         ))}
-                      </SelectContent>
-                    </Select>
+                      </select>
+                      <ChevronDownIcon className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
+                    </div>
                   </div>
                   <div className="space-y-2">
                     <Label>完成度 (10%)</Label>
-                    <Select onValueChange={(v: string | null) => setSampleScores(s => ({ ...s, completeness: parseFloat(v || '0') }))}>
-                      <SelectTrigger>
-                        <SelectValue placeholder="评分 (1-5)" />
-                      </SelectTrigger>
-                      <SelectContent>
+                    <div className="relative w-fit">
+                      <select
+                        value={sampleScores.completeness || ''}
+                        onChange={(e) => setSampleScores(s => ({ ...s, completeness: parseFloat(e.target.value) }))}
+                        className="flex min-w-[150px] items-center justify-between gap-1.5 rounded-lg border border-input bg-transparent py-2 pr-8 pl-3 text-sm outline-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/50 appearance-none cursor-pointer"
+                      >
+                        <option value="">评分 (1-5)</option>
                         {[1, 2, 3, 4, 5].map(n => (
-                          <SelectItem key={n} value={n.toString()}>{n} 分</SelectItem>
+                          <option key={n} value={n}>{n} 分</option>
                         ))}
-                      </SelectContent>
-                    </Select>
+                      </select>
+                      <ChevronDownIcon className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
+                    </div>
                   </div>
                   <div className="space-y-2">
                     <Label>商业匹配 (10%)</Label>
-                    <Select onValueChange={(v: string | null) => setSampleScores(s => ({ ...s, businessMatch: parseFloat(v || '0') }))}>
-                      <SelectTrigger>
-                        <SelectValue placeholder="评分 (1-5)" />
-                      </SelectTrigger>
-                      <SelectContent>
+                    <div className="relative w-fit">
+                      <select
+                        value={sampleScores.businessMatch || ''}
+                        onChange={(e) => setSampleScores(s => ({ ...s, businessMatch: parseFloat(e.target.value) }))}
+                        className="flex min-w-[150px] items-center justify-between gap-1.5 rounded-lg border border-input bg-transparent py-2 pr-8 pl-3 text-sm outline-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/50 appearance-none cursor-pointer"
+                      >
+                        <option value="">评分 (1-5)</option>
                         {[1, 2, 3, 4, 5].map(n => (
-                          <SelectItem key={n} value={n.toString()}>{n} 分</SelectItem>
+                          <option key={n} value={n}>{n} 分</option>
                         ))}
-                      </SelectContent>
-                    </Select>
+                      </select>
+                      <ChevronDownIcon className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
+                    </div>
                   </div>
                 </div>
                 <div className="space-y-2">
@@ -543,16 +558,19 @@ export default function ReviewApplicationPage() {
               <div className="space-y-4">
                 <div className="space-y-2">
                   <Label>考察结果</Label>
-                  <Select value={siteVisitResult} onValueChange={(v) => setSiteVisitResult(v || '')}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="请选择考察结果" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="through">通过</SelectItem>
-                      <SelectItem value="failed">不通过</SelectItem>
-                      <SelectItem value="not_required">无需考察</SelectItem>
-                    </SelectContent>
-                  </Select>
+                  <div className="relative w-fit">
+                    <select
+                      value={siteVisitResult}
+                      onChange={(e) => setSiteVisitResult(e.target.value)}
+                      className="flex min-w-[200px] items-center justify-between gap-1.5 rounded-lg border border-input bg-transparent py-2 pr-8 pl-3 text-sm outline-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/50 appearance-none cursor-pointer"
+                    >
+                      <option value="">请选择考察结果</option>
+                      <option value="through">通过</option>
+                      <option value="failed">不通过</option>
+                      <option value="not_required">无需考察</option>
+                    </select>
+                    <ChevronDownIcon className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
+                  </div>
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="siteVisitComments">考察意见</Label>
@@ -610,15 +628,18 @@ export default function ReviewApplicationPage() {
               <div className="space-y-4">
                 <div className="space-y-2">
                   <Label>验收结果</Label>
-                  <Select value={trialResult} onValueChange={(v) => setTrialResult(v || '')}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="请选择验收结果" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="through">通过</SelectItem>
-                      <SelectItem value="failed">不通过</SelectItem>
-                    </SelectContent>
-                  </Select>
+                  <div className="relative w-fit">
+                    <select
+                      value={trialResult}
+                      onChange={(e) => setTrialResult(e.target.value)}
+                      className="flex min-w-[200px] items-center justify-between gap-1.5 rounded-lg border border-input bg-transparent py-2 pr-8 pl-3 text-sm outline-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/50 appearance-none cursor-pointer"
+                    >
+                      <option value="">请选择验收结果</option>
+                      <option value="through">通过</option>
+                      <option value="failed">不通过</option>
+                    </select>
+                    <ChevronDownIcon className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
+                  </div>
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="trialComments">验收意见</Label>
