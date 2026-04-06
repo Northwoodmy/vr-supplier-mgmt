@@ -13,6 +13,17 @@ datasource db {
 // 用户与权限模块
 // ============================================
 
+// 供应商准入申请状态
+enum ApplicationStatus {
+  pending        // 待审核
+  document_review // 资质初审中
+  sample_review  // 样品评审中
+  site_visit     // 现场考察中
+  trial_run      // 试运行中
+  approved       // 已通过
+  rejected       // 已拒绝
+}
+
 model User {
   id            String   @id @default(cuid())
   username      String   @unique
@@ -86,30 +97,182 @@ model AuditLog {
 }
 
 // ============================================
+// 供应商准入申请
+// ============================================
+
+model SupplierApplication {
+  id                String   @id @default(cuid())
+  companyName       String   // 公司名称
+  contactName       String   // 联系人
+  contactPhone      String   // 联系电话
+  contactEmail      String   // 联系邮箱
+  registeredCapital Float?   // 注册资金（万元）
+  businessLicense   String?  // 营业执照 URL
+  businessScope     String?  // 经营范围
+  teamSize          Int?     // 团队规模
+  coreMembers       String?  // 核心成员介绍 (JSON)
+  engineCapability  String?  // 引擎能力 (UE5/Unity/Both)
+  equipment         String?  // 设备情况 (JSON)
+  financialReport   String?  // 财务报表 URL
+  bankRating        String?  // 银行信用评级
+  creditRecord      String?  // 信誉记录说明
+  recommendation    String?  // 推荐信 (JSON)
+  sampleWorks       String?  // 代表作品 (JSON)
+
+  // 评审信息
+  status            ApplicationStatus @default(pending)
+  applicationDate   DateTime @default(now())
+
+  // 资质初审
+  documentReviewer  String?
+  documentReviewAt  DateTime?
+  documentReviewResult String? // through/failed
+  documentComments  String?
+
+  // 样品评审
+  sampleReviewer    String?
+  sampleReviewAt    DateTime?
+  sampleScore       Float?   // 样品总分
+  sampleComments    String?
+
+  // 现场考察
+  siteVisitAt       DateTime?
+  siteVisitResult   String? // through/failed/not_required
+  siteVisitComments String?
+
+  // 试运行项目
+  trialProjectId    String?
+  trialProjectAt    DateTime?
+  trialResult       String? // through/failed
+  trialComments     String?
+
+  // 最终结果
+  finalScore        Float?   // 综合评分
+  finalResult       String?  // through/failed
+  rejectedReason    String?
+  completedAt       DateTime?
+
+  // 关联正式供应商（如果通过）
+  supplierId        String?
+
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  @@index([status])
+  @@index([applicationDate])
+}
+
+// ============================================
+// 供应商级别变更日志
+// ============================================
+
+model SupplierLevelChangeLog {
+  id          String   @id @default(cuid())
+  supplierId  String
+  oldLevel    String   // S/A/B/C
+  newLevel    String   // S/A/B/C
+  changeReason String  // 升降级原因
+  changedBy   String   // 操作人
+  createdAt   DateTime @default(now())
+
+  supplier  Supplier @relation(fields: [supplierId], references: [id], onDelete: Cascade)
+
+  @@index([supplierId])
+}
+
+// ============================================
+// 历史价格数据库
+// ============================================
+
+model ProjectPrice {
+  id          String   @id @default(cuid())
+  projectType String   // 体验类/叙事类
+  duration    String   // 时长范围 (3-5 分钟/5-10 分钟)
+  complexity  String   // simple/medium/complex
+  minPrice    Float    // 最低单价（元/秒）
+  maxPrice    Float    // 最高单价（元/秒）
+  avgPrice    Float?   // 平均单价
+  sampleCount Int      @default(1)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@unique([projectType, duration, complexity])
+}
+
+// ============================================
+// 供应商培训记录
+// ============================================
+
+model SupplierTraining {
+  id          String   @id @default(cuid())
+  supplierId  String
+  title       String   // 培训主题
+  type        String   // 技术培训/案例分享/专家讲座
+  trainer     String?  // 培训师
+  trainingDate DateTime
+  attendees   String?  // 参会人员 (JSON)
+  materials   String?  // 培训材料 URL
+  feedback    String?  // 培训反馈
+  createdAt   DateTime @default(now())
+
+  supplier  Supplier @relation(fields: [supplierId], references: [id], onDelete: Cascade)
+
+  @@index([supplierId])
+}
+
+// ============================================
 // 供应商模块
 // ============================================
 
 model Supplier {
-  id              String   @id @default(cuid())
-  name            String
-  contactPerson   String?
-  contactEmail    String?
-  contactPhone    String?
-  address         String?
-  level           String   @default("B") // S/A/B/C
-  techStack       String   // UE5/U3D/Both - comma separated
-  description     String?
-  status          String   @default("active") // active/inactive/blacklisted
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
-  createdById     String
+  id                  String   @id @default(cuid())
+  name                String   // 供应商简称
+  companyName         String?  // 公司全称
+  contactPerson       String?
+  contactEmail        String?
+  contactPhone        String?
+  address             String?
+  level               String   @default("B") // S/A/B/C
+  techStack           String   // UE5/U3D/Both
+  description         String?
+  status              String   @default("active") // active/inactive/blacklisted
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+  createdById         String
 
-  creator         User           @relation("SupplierCreator", fields: [createdById], references: [id])
-  teamMembers     TeamMember[]
-  capacity        SupplierCapacity?
-  projects        SupplierProject[]
-  qualityReviews  QualityReview[]
-  ratings         SupplierRating[]
+  // 资质信息
+  legalRepresentative String?  // 法人代表
+  establishedDate     DateTime? // 成立日期
+  registeredCapital   Float?   // 注册资金（万元）
+  businessLicense     String?  // 营业执照 URL
+  businessScope       String?  // 经营范围
+
+  // 财务信息
+  bankAccount         String?  // 银行账号
+  bankName            String?  // 开户行
+  taxType             String?  // 纳税人类型：general/small
+
+  // 专业能力
+  coreMembers         String?  // 核心成员介绍 (JSON)
+  equipment           String?  // 设备情况 (JSON)
+  sampleWorks         String?  // 代表作品 (JSON)
+
+  // 其他
+  creditRecord        String?  // 信誉记录
+  remarks             String?  // 备注
+
+  levelUpdatedAt      DateTime?
+  levelChangeReason   String?
+  applicationId       String?  // 关联准入申请记录
+
+  creator             User           @relation("SupplierCreator", fields: [createdById], references: [id])
+  teamMembers         TeamMember[]
+  capacity            SupplierCapacity?
+  projects            SupplierProject[]
+  qualityReviews      QualityReview[]
+  ratings             SupplierRating[]
+  levelChanges        SupplierLevelChangeLog[]
+  trainings           SupplierTraining[]
 
   @@index([level])
   @@index([status])
@@ -184,6 +347,11 @@ model SupplierProject {
   createdAt         DateTime @default(now())
   updatedAt         DateTime @updatedAt
 
+  // 价格管控
+  estimatedCost     Float?   // 预估成本
+  finalCost         Float?   // 最终结算价
+  priceDeviation    Float?   // 报价偏差率
+
   supplier Supplier @relation(fields: [supplierId], references: [id], onDelete: Cascade)
   project  Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
 
@@ -226,7 +394,20 @@ model QualityReview {
   storyNovelty      Float    // 1-5
   totalScore        Float
   comments          String?
-  status            String   @default("draft") // draft/submitted
+  status            String   @default("draft") // draft/submitted/confirmed/archived
+
+  // 详细评分说明
+  visualQualityNote     String?
+  animationSmoothnessNote String?
+  vfxMatchNote          String?
+  audioQualityNote      String?
+  cameraWorkNote        String?
+  storyNoveltyNote      String?
+
+  // 供应商确认
+  confirmedBy       String?
+  confirmedAt       DateTime?
+
   createdAt         DateTime @default(now())
   updatedAt         DateTime @updatedAt
 

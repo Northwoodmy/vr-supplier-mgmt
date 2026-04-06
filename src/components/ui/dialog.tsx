@@ -7,8 +7,15 @@ import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import { XIcon } from "lucide-react"
 
-function Dialog({ ...props }: DialogPrimitive.Root.Props) {
-  return <DialogPrimitive.Root data-slot="dialog" {...props} />
+function Dialog({ open, onOpenChange, ...props }: DialogPrimitive.Root.Props) {
+  return (
+    <DialogPrimitive.Root
+      open={open}
+      onOpenChange={onOpenChange}
+      data-slot="dialog"
+      {...props}
+    />
+  )
 }
 
 function DialogTrigger({
@@ -25,7 +32,7 @@ function DialogTrigger({
     )
   }
   return (
-    <DialogPrimitive.Trigger data-slot="dialog-trigger" render={children} {...props} />
+    <DialogPrimitive.Trigger data-slot="dialog-trigger" render={children as any} {...props} />
   )
 }
 
@@ -81,7 +88,7 @@ function DialogContent({
                 variant="ghost"
                 className="absolute top-2 right-2"
                 size="icon-sm"
-              />
+              /> as any
             }
           >
             <XIcon
@@ -123,7 +130,7 @@ function DialogFooter({
     >
       {children}
       {showCloseButton && (
-        <DialogPrimitive.Close render={<Button variant="outline" />}>
+        <DialogPrimitive.Close render={<Button variant="outline" /> as any}>
           Close
         </DialogPrimitive.Close>
       )}

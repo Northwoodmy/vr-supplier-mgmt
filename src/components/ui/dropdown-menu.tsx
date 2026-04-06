@@ -28,7 +28,7 @@ function DropdownMenuTrigger({
     )
   }
   return (
-    <MenuPrimitive.Trigger data-slot="dropdown-menu-trigger" render={children} {...props} />
+    <MenuPrimitive.Trigger data-slot="dropdown-menu-trigger" render={children as any} {...props} />
   )
 }
 

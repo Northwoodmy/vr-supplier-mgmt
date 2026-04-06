@@ -223,7 +223,7 @@ export default function EditUserPage() {
               <Label>角色</Label>
               <Select
                 value={formData.roleIds[0] || ''}
-                onValueChange={(value) => updateField('roleIds', [value])}
+                onValueChange={(value) => updateField('roleIds', [value || ''])}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="选择角色">

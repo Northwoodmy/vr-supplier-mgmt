@@ -9,14 +9,37 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 interface Supplier {
   id: string;
   name: string;
+  companyName?: string;
   techStack: string;
   level: string;
   status: string;
-  contactPerson: string;
-  contactEmail: string;
-  contactPhone: string;
-  address: string;
+  contactPerson?: string;
+  contactEmail?: string;
+  contactPhone?: string;
+  address?: string;
   description?: string;
+
+  // 资质信息
+  legalRepresentative?: string;
+  establishedDate?: string;
+  registeredCapital?: number;
+  businessLicense?: string;
+  businessScope?: string;
+
+  // 财务信息
+  bankAccount?: string;
+  bankName?: string;
+  taxType?: string;
+
+  // 其他
+  creditRecord?: string;
+  remarks?: string;
+
+  // JSON 字段
+  coreMembers?: string; // JSON string
+  equipment?: string; // JSON string
+  sampleWorks?: string; // JSON string
+
   teamMembers: Array<{
     id: string;
     role: string;
@@ -149,6 +172,9 @@ export default function SupplierDetailPage() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-semibold text-gray-900">{supplier.name}</h1>
+          {supplier.companyName && (
+            <p className="text-gray-500 mt-1">{supplier.companyName}</p>
+          )}
           <div className="flex items-center gap-2 mt-2">
             <Badge variant="outline">{supplier.techStack}</Badge>
             <Badge className={levelConfig[supplier.level]?.color}>
@@ -169,7 +195,34 @@ export default function SupplierDetailPage() {
         </div>
       </div>
 
-      {/* Contact Information */}
+      {/* 基本信息 */}
+      <Card>
+        <CardHeader>
+          <CardTitle>基本信息</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid gap-4 md:grid-cols-2">
+            <div>
+              <div className="text-sm text-gray-500">供应商简称</div>
+              <div className="font-medium">{supplier.name || '-'}</div>
+            </div>
+            <div>
+              <div className="text-sm text-gray-500">公司全称</div>
+              <div className="font-medium">{supplier.companyName || '-'}</div>
+            </div>
+            <div>
+              <div className="text-sm text-gray-500">技术栈</div>
+              <div className="font-medium">{supplier.techStack || '-'}</div>
+            </div>
+            <div>
+              <div className="text-sm text-gray-500">描述</div>
+              <div className="font-medium">{supplier.description || '-'}</div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* 联系信息 */}
       <Card>
         <CardHeader>
           <CardTitle>联系信息</CardTitle>
@@ -196,7 +249,75 @@ export default function SupplierDetailPage() {
         </CardContent>
       </Card>
 
-      {/* Capacity Overview */}
+      {/* 资质信息 */}
+      <Card>
+        <CardHeader>
+          <CardTitle>资质信息</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid gap-4 md:grid-cols-2">
+            <div>
+              <div className="text-sm text-gray-500">法人代表</div>
+              <div className="font-medium">{supplier.legalRepresentative || '-'}</div>
+            </div>
+            <div>
+              <div className="text-sm text-gray-500">成立日期</div>
+              <div className="font-medium">
+                {supplier.establishedDate
+                  ? new Date(supplier.establishedDate).toLocaleDateString('zh-CN')
+                  : '-'}
+              </div>
+            </div>
+            <div>
+              <div className="text-sm text-gray-500">注册资金（万元）</div>
+              <div className="font-medium">{supplier.registeredCapital ? `${supplier.registeredCapital} 万元` : '-'}</div>
+            </div>
+            <div>
+              <div className="text-sm text-gray-500">营业执照</div>
+              <div className="font-medium">
+                {supplier.businessLicense ? (
+                  <a href={supplier.businessLicense} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">
+                    查看营业执照
+                  </a>
+                ) : (
+                  '-'
+                )}
+              </div>
+            </div>
+          </div>
+          <div className="mt-4">
+            <div className="text-sm text-gray-500 mb-1">经营范围</div>
+            <div className="font-medium">{supplier.businessScope || '-'}</div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* 财务信息 */}
+      <Card>
+        <CardHeader>
+          <CardTitle>财务信息</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid gap-4 md:grid-cols-2">
+            <div>
+              <div className="text-sm text-gray-500">银行账号</div>
+              <div className="font-medium">{supplier.bankAccount || '-'}</div>
+            </div>
+            <div>
+              <div className="text-sm text-gray-500">开户行</div>
+              <div className="font-medium">{supplier.bankName || '-'}</div>
+            </div>
+            <div>
+              <div className="text-sm text-gray-500">纳税人类型</div>
+              <div className="font-medium">
+                {supplier.taxType === 'general' ? '一般纳税人' : supplier.taxType === 'small' ? '小规模纳税人' : '-'}
+              </div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* 产能配置 */}
       {supplier.capacity && (
         <Card>
           <CardHeader>
@@ -221,34 +342,139 @@ export default function SupplierDetailPage() {
         </Card>
       )}
 
-      {/* Team Composition */}
-      <Card>
-        <CardHeader>
-          <CardTitle>团队构成</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-            {supplier.teamMembers.map((member) => (
-              <div key={member.id} className="p-4 border rounded-lg">
-                <div className="font-medium">{member.role}</div>
-                <div className="text-sm text-gray-500">{member.category}</div>
-                <div className="flex items-center gap-4 mt-2">
-                  <div>
-                    <span className="text-xs text-gray-500">总数：</span>
-                    <span className="font-medium">{member.count}</span>
-                  </div>
-                  <div>
-                    <span className="text-xs text-gray-500">资深：</span>
-                    <span className="font-medium">{member.seniorCount}</span>
+      {/* 团队架构 */}
+      {supplier.teamMembers && supplier.teamMembers.length > 0 && (
+        <Card>
+          <CardHeader>
+            <CardTitle>团队架构</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+              {supplier.teamMembers.map((member) => (
+                <div key={member.id} className="p-4 border rounded-lg">
+                  <div className="font-medium">{member.role}</div>
+                  <div className="text-sm text-gray-500">{member.category}</div>
+                  <div className="flex items-center gap-4 mt-2">
+                    <div>
+                      <span className="text-xs text-gray-500">总数：</span>
+                      <span className="font-medium">{member.count}</span>
+                    </div>
+                    <div>
+                      <span className="text-xs text-gray-500">资深：</span>
+                      <span className="font-medium">{member.seniorCount}</span>
+                    </div>
                   </div>
                 </div>
-              </div>
-            ))}
-          </div>
-        </CardContent>
-      </Card>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
-      {/* Active Projects */}
+      {/* 核心成员 */}
+      {supplier.coreMembers && (
+        <Card>
+          <CardHeader>
+            <CardTitle>核心成员</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              {JSON.parse(supplier.coreMembers).map((member: any, index: number) => (
+                <div key={index} className="p-4 border rounded-lg">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <div className="font-medium">{member.name}</div>
+                      <div className="text-sm text-gray-500">{member.position}</div>
+                    </div>
+                    <div className="text-sm text-gray-500">{member.experience} 年经验</div>
+                  </div>
+                  {member.description && (
+                    <p className="text-sm text-gray-600 mt-2">{member.description}</p>
+                  )}
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* 设备情况 */}
+      {supplier.equipment && (
+        <Card>
+          <CardHeader>
+            <CardTitle>设备情况</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              {JSON.parse(supplier.equipment).map((eq: any, index: number) => (
+                <div key={index} className="p-4 border rounded-lg">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <div className="font-medium">{eq.name}</div>
+                      <div className="text-sm text-gray-500">{eq.model}</div>
+                    </div>
+                    <div className="text-sm text-gray-500">x{eq.quantity}</div>
+                  </div>
+                  {eq.description && (
+                    <p className="text-sm text-gray-600 mt-2">{eq.description}</p>
+                  )}
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* 代表作品 */}
+      {supplier.sampleWorks && (
+        <Card>
+          <CardHeader>
+            <CardTitle>代表作品</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              {JSON.parse(supplier.sampleWorks).map((work: any, index: number) => (
+                <div key={index} className="p-4 border rounded-lg">
+                  <div className="font-medium">{work.name}</div>
+                  {work.description && (
+                    <p className="text-sm text-gray-600 mt-1">{work.description}</p>
+                  )}
+                  {work.url && (
+                    <a href={work.url} target="_blank" rel="noopener noreferrer" className="text-sm text-primary hover:underline">
+                      查看作品 →
+                    </a>
+                  )}
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* 其他信息 */}
+      {(supplier.creditRecord || supplier.remarks) && (
+        <Card>
+          <CardHeader>
+            <CardTitle>其他信息</CardTitle>
+          </CardHeader>
+          <CardContent>
+            {supplier.creditRecord && (
+              <div className="mb-4">
+                <div className="text-sm text-gray-500 mb-1">信誉记录</div>
+                <div className="font-medium">{supplier.creditRecord}</div>
+              </div>
+            )}
+            {supplier.remarks && (
+              <div>
+                <div className="text-sm text-gray-500 mb-1">备注</div>
+                <div className="font-medium">{supplier.remarks}</div>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      )}
+
+      {/* 进行中项目 */}
       <Card>
         <CardHeader>
           <CardTitle>进行中项目</CardTitle>
@@ -291,7 +517,7 @@ export default function SupplierDetailPage() {
         </CardContent>
       </Card>
 
-      {/* Quality Score */}
+      {/* 品质评分 */}
       {avgQualityScore !== null && (
         <Card>
           <CardHeader>
@@ -321,18 +547,6 @@ export default function SupplierDetailPage() {
                 ))}
               </div>
             )}
-          </CardContent>
-        </Card>
-      )}
-
-      {/* Description */}
-      {supplier.description && (
-        <Card>
-          <CardHeader>
-            <CardTitle>供应商标述</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-gray-600 whitespace-pre-wrap">{supplier.description}</p>
           </CardContent>
         </Card>
       )}

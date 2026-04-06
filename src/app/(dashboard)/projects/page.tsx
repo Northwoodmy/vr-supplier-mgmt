@@ -130,7 +130,10 @@ export default function ProjectsPage() {
                                  project.currentStage === 'review' ? 75 :
                                  project.currentStage === 'production' ? 50 :
                                  project.currentStage === 'pre_production' ? 25 : 10;
-                const supplierNames = project.suppliers?.map((s: any) => s.supplier.name).join('、') || '未分配';
+                const supplierNames = project.suppliers
+                  ?.map((s: any) => s.supplier?.name)
+                  .filter((name: any) => name != null)
+                  .join('、') || '未分配';
 
                 return (
                   <div

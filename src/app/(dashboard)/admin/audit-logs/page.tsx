@@ -153,7 +153,7 @@ export default function AuditLogsPage() {
               {actionStats?.map((stat) => (
                 <Badge
                   key={stat.action}
-                  className={actionColors[stat.action] || 'bg-gray-100 text-gray-700'}
+                  className={stat.action ? actionColors[stat.action] || 'bg-gray-100 text-gray-700' : 'bg-gray-100 text-gray-700'}
                   variant="secondary"
                 >
                   {stat.action}: {stat.count}
@@ -172,7 +172,7 @@ export default function AuditLogsPage() {
               {resourceStats?.map((stat) => (
                 <Badge
                   key={stat.resource}
-                  className={resourceColors[stat.resource] || 'bg-gray-100 text-gray-700'}
+                  className={stat.resource ? resourceColors[stat.resource] || 'bg-gray-100 text-gray-700' : 'bg-gray-100 text-gray-700'}
                   variant="secondary"
                 >
                   {stat.resource}: {stat.count}
@@ -190,7 +190,7 @@ export default function AuditLogsPage() {
             <div className="space-y-2">
               {userStats?.slice(0, 3).map((stat) => (
                 <div key={stat.userId} className="flex items-center justify-between text-sm">
-                  <span>用户：{stat.userId.slice(0, 8)}...</span>
+                  <span>用户：{stat.userId ? stat.userId.slice(0, 8) + '...' : '未知'}</span>
                   <Badge variant="outline">{stat.count} 次</Badge>
                 </div>
               ))}
@@ -207,7 +207,7 @@ export default function AuditLogsPage() {
               <Label>操作类型</Label>
               <Select
                 value={filters.action === 'all' ? '' : filters.action}
-                onValueChange={(value) => setFilters({ ...filters, action: value, page: 1 })}
+                onValueChange={(value) => setFilters({ ...filters, action: value || '', page: 1 })}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="全部" />
@@ -226,7 +226,7 @@ export default function AuditLogsPage() {
               <Label>资源类型</Label>
               <Select
                 value={filters.resource === 'all' ? '' : filters.resource}
-                onValueChange={(value) => setFilters({ ...filters, resource: value, page: 1 })}
+                onValueChange={(value) => setFilters({ ...filters, resource: value || '', page: 1 })}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="全部" />

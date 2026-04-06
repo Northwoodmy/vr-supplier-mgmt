@@ -4,6 +4,7 @@ import { createTRPCRouter, publicProcedure, protectedProcedure } from '../trpc';
 
 const supplierSchema = z.object({
   name: z.string().min(1, '请输入供应商名称'),
+  companyName: z.string().optional(),
   contactPerson: z.string().optional(),
   contactEmail: z.string().email('请输入有效的邮箱地址').optional().or(z.literal('')),
   contactPhone: z.string().optional(),
@@ -12,6 +13,27 @@ const supplierSchema = z.object({
   techStack: z.string(),
   description: z.string().optional(),
   status: z.enum(['active', 'inactive', 'blacklisted']).default('active'),
+
+  // 资质信息
+  legalRepresentative: z.string().optional(),
+  establishedDate: z.date().optional().or(z.string().optional()),
+  registeredCapital: z.number().optional(),
+  businessLicense: z.string().optional(),
+  businessScope: z.string().optional(),
+
+  // 财务信息
+  bankAccount: z.string().optional(),
+  bankName: z.string().optional(),
+  taxType: z.string().optional(),
+
+  // 其他
+  creditRecord: z.string().optional(),
+  remarks: z.string().optional(),
+
+  // JSON 字段（核心成员、设备情况、代表作品）
+  coreMembers: z.any().optional(),
+  equipment: z.any().optional(),
+  sampleWorks: z.any().optional(),
 });
 
 const teamMemberSchema = z.object({
@@ -55,6 +77,8 @@ export const supplierRouter = createTRPCRouter({
         },
         qualityReviews: true,
         ratings: true,
+        levelChanges: true,
+        trainings: true,
       },
     });
   }),
@@ -65,19 +89,26 @@ export const supplierRouter = createTRPCRouter({
       supplier: supplierSchema,
       teamMembers: z.array(teamMemberSchema).optional(),
       capacity: capacitySchema.optional(),
+      coreMembers: z.any().optional(),
+      equipments: z.any().optional(),
+      sampleWorks: z.any().optional(),
     }))
     .mutation(async ({ input, ctx }) => {
       if (!ctx.user?.permissions?.includes('supplier:create')) {
         throw new Error('没有创建供应商的权限');
       }
 
-      const { supplier, teamMembers, capacity } = input;
+      const { supplier, teamMembers, capacity, coreMembers, equipments, sampleWorks } = input;
 
       return prisma.supplier.create({
         data: {
           ...supplier,
+          establishedDate: supplier.establishedDate ? new Date(supplier.establishedDate) : null,
           createdById: ctx.user.id,
-          teamMembers: teamMembers ? {
+          coreMembers: coreMembers && coreMembers.length > 0 ? JSON.stringify(coreMembers) : null,
+          equipment: equipments && equipments.length > 0 ? JSON.stringify(equipments) : null,
+          sampleWorks: sampleWorks && sampleWorks.length > 0 ? JSON.stringify(sampleWorks) : null,
+          teamMembers: teamMembers && teamMembers.length > 0 ? {
             create: teamMembers.map(tm => ({
               role: tm.role,
               category: tm.category,
@@ -107,18 +138,27 @@ export const supplierRouter = createTRPCRouter({
       supplier: supplierSchema.partial(),
       teamMembers: z.array(teamMemberSchema.merge(z.object({ id: z.string().optional() }))).optional(),
       capacity: capacitySchema.partial().optional(),
+      coreMembers: z.any().optional(),
+      equipments: z.any().optional(),
+      sampleWorks: z.any().optional(),
     }))
     .mutation(async ({ input, ctx }) => {
       if (!ctx.user?.permissions?.includes('supplier:edit')) {
         throw new Error('没有编辑供应商的权限');
       }
 
-      const { id, supplier, teamMembers, capacity } = input;
+      const { id, supplier, teamMembers, capacity, coreMembers, equipments, sampleWorks } = input;
 
       // 更新供应商基本信息
       await prisma.supplier.update({
         where: { id },
-        data: supplier,
+        data: {
+          ...supplier,
+          establishedDate: supplier.establishedDate ? new Date(supplier.establishedDate) : null,
+          coreMembers: coreMembers !== undefined ? (coreMembers && coreMembers.length > 0 ? JSON.stringify(coreMembers) : null) : undefined,
+          equipment: equipments !== undefined ? (equipments && equipments.length > 0 ? JSON.stringify(equipments) : null) : undefined,
+          sampleWorks: sampleWorks !== undefined ? (sampleWorks && sampleWorks.length > 0 ? JSON.stringify(sampleWorks) : null) : undefined,
+        },
       });
 
       // 更新团队架构

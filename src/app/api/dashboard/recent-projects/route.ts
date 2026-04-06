@@ -41,7 +41,8 @@ export async function GET() {
     const recentProjects = projects.map((project) => {
       // 获取供应商名称
       const supplierNames = project.suppliers
-        .map((s) => s.supplier.name)
+        .map((s) => s.supplier?.name)
+        .filter((name) => name != null)
         .join('、');
 
       // 判断项目状态显示

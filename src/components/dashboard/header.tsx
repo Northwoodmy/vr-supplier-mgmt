@@ -37,16 +37,13 @@ export default function DashboardHeader() {
 
       <div className="flex items-center gap-4">
         <DropdownMenu>
-          <DropdownMenuTrigger
-            render={(props) => (
-              <button
-                {...props}
-                className="w-10 h-10 rounded-full bg-purple-100 flex items-center justify-center hover:bg-purple-200 transition-colors"
-              >
-                <span className="text-purple-700 font-medium text-sm">{userInitial}</span>
-              </button>
-            )}
-          />
+          <DropdownMenuTrigger>
+            <button
+              className="w-10 h-10 rounded-full bg-purple-100 flex items-center justify-center hover:bg-purple-200 transition-colors"
+            >
+              <span className="text-purple-700 font-medium text-sm">{userInitial}</span>
+            </button>
+          </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-56">
             <DropdownMenuLabel>
               <div className="flex flex-col space-y-1">

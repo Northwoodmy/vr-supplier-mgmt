@@ -161,7 +161,7 @@ export default function EvaluationsPage() {
                           </div>
                         </div>
                         <div className="col-span-3 text-center">
-                          <span className="text-sm">{sp.supplier.name}</span>
+                          <span className="text-sm">{sp.supplier?.name || '未关联'}</span>
                         </div>
                         <div className="col-span-2 text-center">
                           <Badge>{project.currentStage === 'completed' ? '已完成' : '待评估'}</Badge>
@@ -214,7 +214,7 @@ export default function EvaluationsPage() {
                       <div className="text-sm text-gray-500">{evaluation.project.code}</div>
                     </div>
                     <div className="col-span-3 text-center">
-                      <span className="text-sm">{evaluation.supplier.name}</span>
+                      <span className="text-sm">{evaluation.supplier?.name || '未关联'}</span>
                     </div>
                     <div className="col-span-2 text-center">
                       <div className="flex items-center justify-center gap-1">

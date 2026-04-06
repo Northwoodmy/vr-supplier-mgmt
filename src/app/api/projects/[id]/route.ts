@@ -59,7 +59,6 @@ export async function PUT(
       startDate,
       endDate,
       expectedDeliveryDate,
-      actualDeliveryDate,
       status,
       currentStage,
     } = body;
@@ -88,7 +87,6 @@ export async function PUT(
         startDate: startDate !== undefined ? new Date(startDate) : existingProject.startDate,
         endDate: endDate !== undefined ? (endDate ? new Date(endDate) : null) : existingProject.endDate,
         expectedDeliveryDate: expectedDeliveryDate !== undefined ? new Date(expectedDeliveryDate) : existingProject.expectedDeliveryDate,
-        actualDeliveryDate: actualDeliveryDate !== undefined ? (actualDeliveryDate ? new Date(actualDeliveryDate) : null) : existingProject.actualDeliveryDate,
         status: status ?? existingProject.status,
         currentStage: currentStage ?? existingProject.currentStage,
       },

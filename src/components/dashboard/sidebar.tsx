@@ -13,6 +13,7 @@ import {
   ClipboardList,
   Shield,
   FileText,
+  Building2,
 } from 'lucide-react';
 
 const navigation = [
@@ -27,6 +28,7 @@ const navigation = [
 const adminNavigation = [
   { name: '用户管理', href: '/admin/users', icon: Shield },
   { name: '审计日志', href: '/admin/audit-logs', icon: FileText },
+  { name: '供应商准入', href: '/admin/supplier-applications', icon: Building2 },
 ];
 
 export default function DashboardSidebar() {
@@ -34,8 +36,9 @@ export default function DashboardSidebar() {
   const { data: user } = useAuth();
   const canManageUsers = user?.permissions?.includes('user:manage');
   const canViewAudit = user?.permissions?.includes('audit:view');
+  const canManageSuppliers = user?.permissions?.includes('supplier:manage');
   const canViewReport = user?.permissions?.includes('report:view');
-  const showAdmin = canManageUsers || canViewAudit;
+  const showAdmin = canManageUsers || canViewAudit || canManageSuppliers;
 
   // 根据权限过滤导航菜单
   const filteredNavigation = navigation.filter((item) => {
@@ -83,7 +86,8 @@ export default function DashboardSidebar() {
               const isActive = pathname === item.href || pathname?.startsWith(item.href + '/');
               const canAccess =
                 (item.href === '/admin/users' && canManageUsers) ||
-                (item.href === '/admin/audit-logs' && canViewAudit);
+                (item.href === '/admin/audit-logs' && canViewAudit) ||
+                (item.href === '/admin/supplier-applications' && canManageSuppliers);
 
               if (!canAccess) return null;
 

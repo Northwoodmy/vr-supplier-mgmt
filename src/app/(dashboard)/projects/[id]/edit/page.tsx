@@ -187,7 +187,7 @@ export default function EditProjectPage() {
                 <Label htmlFor="status">项目状态</Label>
                 <Select
                   value={formData.status}
-                  onValueChange={(value) => updateField('status', value)}
+                  onValueChange={(value) => updateField('status', value || '')}
                 >
                   <SelectTrigger>
                     <SelectValue>
@@ -208,7 +208,7 @@ export default function EditProjectPage() {
                 <Label htmlFor="currentStage">当前阶段</Label>
                 <Select
                   value={formData.currentStage}
-                  onValueChange={(value) => updateField('currentStage', value)}
+                  onValueChange={(value) => updateField('currentStage', value || '')}
                 >
                   <SelectTrigger>
                     <SelectValue>

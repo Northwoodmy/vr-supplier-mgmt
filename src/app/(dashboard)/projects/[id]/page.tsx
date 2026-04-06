@@ -336,9 +336,13 @@ export default function ProjectDetailPage() {
                   >
                     <div className="flex-1">
                       <div className="flex items-center gap-2 mb-2">
-                        <span className="font-medium">{allocation.supplier.name}</span>
-                        <Badge variant="outline">{allocation.supplier.level}级</Badge>
-                        <Badge variant="secondary">{allocation.supplier.techStack}</Badge>
+                        <span className="font-medium">{allocation.supplier?.name || '未关联'}</span>
+                        {allocation.supplier && (
+                          <>
+                            <Badge variant="outline">{allocation.supplier.level}级</Badge>
+                            <Badge variant="secondary">{allocation.supplier.techStack}</Badge>
+                          </>
+                        )}
                         <Badge className={complexity.color}>{complexity.label}</Badge>
                       </div>
                       <div className="flex items-center gap-4 text-sm text-gray-500">
@@ -444,7 +448,7 @@ export default function ProjectDetailPage() {
                   >
                     <div className="flex-1">
                       <div className="flex items-center gap-2">
-                        <span className="font-medium">{review.supplier.name}</span>
+                        <span className="font-medium">{review.supplier?.name || '未关联'}</span>
                         <Badge variant={statusVariant}>
                           {statusLabel}
                         </Badge>

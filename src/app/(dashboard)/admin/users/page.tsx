@@ -30,6 +30,7 @@ import {
 } from '@/components/ui/select';
 import { useAuth } from '@/lib/auth-hooks';
 import { useRouter } from 'next/navigation';
+import { ChevronDownIcon } from 'lucide-react';
 
 interface User {
   id: string;
@@ -61,6 +62,7 @@ export default function UsersPage() {
   const [roles, setRoles] = useState<Role[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isCreating, setIsCreating] = useState(false);
+  const [selectedRoleId, setSelectedRoleId] = useState<string | null>(null);
 
   // 检查权限
   const canManage = currentUser?.permissions?.includes('user:manage');
@@ -169,57 +171,62 @@ export default function UsersPage() {
                 <DialogTitle>新建用户</DialogTitle>
               </DialogHeader>
               <form
-                onSubmit={(e) => {
+                onSubmit={async (e) => {
                   e.preventDefault();
                   const formData = new FormData(e.currentTarget);
-                  handleCreate({
+                  await handleCreate({
                     username: formData.get('username') as string,
                     email: formData.get('email') as string,
                     password: formData.get('password') as string,
                     displayName: formData.get('displayName') as string,
-                    roleIds: [formData.get('roleIds') as string],
+                    roleIds: selectedRoleId ? [selectedRoleId] : [],
                   });
+                  setSelectedRoleId(null);
                 }}
                 className="space-y-4"
               >
                 <div className="space-y-2">
                   <Label htmlFor="username">用户名</Label>
-                  <Input name="username" required />
+                  <Input name="username" id="username" required className="w-full" />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="email">邮箱</Label>
-                  <Input name="email" type="email" />
+                  <Input name="email" id="email" type="email" className="w-full" />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="password">密码</Label>
-                  <Input name="password" type="password" minLength={6} required />
+                  <Input name="password" id="password" type="password" minLength={6} required className="w-full" />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="displayName">显示名称</Label>
-                  <Input name="displayName" />
+                  <Input name="displayName" id="displayName" className="w-full" />
                 </div>
                 <div className="space-y-2">
                   <Label>角色</Label>
-                  <Select name="roleIds">
-                    <SelectTrigger>
-                      <SelectValue placeholder="选择角色">
-                        {(value) => roles.find(r => r.id === value)?.displayName || value}
-                      </SelectValue>
-                    </SelectTrigger>
-                    <SelectContent>
+                  <div className="relative w-fit">
+                    <select
+                      value={selectedRoleId || ''}
+                      onChange={(e) => setSelectedRoleId(e.target.value || null)}
+                      className="flex min-w-[200px] items-center justify-between gap-1.5 rounded-lg border border-input bg-transparent py-2 pr-8 pl-3 text-sm outline-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/50 disabled:cursor-not-allowed disabled:opacity-50 appearance-none cursor-pointer"
+                    >
+                      <option value="" disabled>选择角色</option>
                       {roles.map((role) => (
-                        <SelectItem key={role.id} value={role.id}>
+                        <option key={role.id} value={role.id}>
                           {role.displayName}
-                        </SelectItem>
+                        </option>
                       ))}
-                    </SelectContent>
-                  </Select>
+                    </select>
+                    <ChevronDownIcon className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
+                  </div>
                 </div>
                 <div className="flex justify-end gap-2 pt-4">
-                  <Button type="button" variant="outline" onClick={() => setIsCreateDialogOpen(false)}>
+                  <Button type="button" variant="outline" onClick={() => {
+                    setIsCreateDialogOpen(false);
+                    setSelectedRoleId(null);
+                  }}>
                     取消
                   </Button>
-                  <Button type="submit" disabled={isCreating}>
+                  <Button type="submit" disabled={isCreating || !selectedRoleId}>
                     {isCreating ? '创建中...' : '创建'}
                   </Button>
                 </div>

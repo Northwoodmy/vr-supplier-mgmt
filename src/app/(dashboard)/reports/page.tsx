@@ -12,15 +12,22 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
+import { useEffect, useState } from 'react';
 
-// 临时数据
-const rankingData = [
-  { rank: 1, name: 'ZZ 传媒', level: 'S', projects: 15, avgScore: 4.5, totalCost: 450, costPerformance: 0.100 },
-  { rank: 2, name: 'XX 科技有限公司', level: 'A', projects: 12, avgScore: 4.2, totalCost: 380, costPerformance: 0.089 },
-  { rank: 3, name: 'YY 工作室', level: 'B', projects: 8, avgScore: 4.0, totalCost: 220, costPerformance: 0.082 },
-  { rank: 4, name: 'BB 创意工坊', level: 'B', projects: 6, avgScore: 3.9, totalCost: 180, costPerformance: 0.078 },
-  { rank: 5, name: 'AA 数字艺术', level: 'C', projects: 4, avgScore: 3.5, totalCost: 120, costPerformance: 0.058 },
-];
+interface SupplierRating {
+  id: string;
+  supplierId: string;
+  year: number;
+  projectCount: number;
+  avgQualityScore: number;
+  totalCost: number;
+  costPerformance: number;
+  supplier?: {
+    id: string;
+    name: string;
+    level: string;
+  };
+}
 
 const levelColors = {
   S: 'bg-purple-100 text-purple-800',
@@ -31,10 +38,55 @@ const levelColors = {
 
 export default function ReportsPage() {
   const { data: currentUser } = useAuth();
+  const [ratings, setRatings] = useState<SupplierRating[]>([]);
+  const [loading, setLoading] = useState(true);
 
   // 检查权限
   const canViewReport = currentUser?.permissions?.includes('report:view');
   const canExport = currentUser?.permissions?.includes('report:export');
+
+  // 获取报表数据
+  useEffect(() => {
+    if (!canViewReport) return;
+
+    async function fetchData() {
+      try {
+        const res = await fetch('/api/reports');
+        if (res.ok) {
+          const data = await res.json();
+          setRatings(data);
+        }
+      } catch (error) {
+        console.error('Failed to fetch reports:', error);
+      } finally {
+        setLoading(false);
+      }
+    }
+    fetchData();
+  }, [canViewReport]);
+
+  // 计算最新年份的数据和排名
+  const currentYear = new Date().getFullYear();
+  // 获取数据库中最新的年份（可能不是当前年份）
+  const latestYear = ratings.length > 0 ? Math.max(...ratings.map(r => r.year)) : currentYear;
+  const displayYear = latestYear;
+
+  const currentYearRatings = ratings
+    .filter(r => r.year === displayYear && r.supplier)
+    .sort((a, b) => b.costPerformance - a.costPerformance)
+    .map((rating, index) => ({
+      ...rating,
+      rank: index + 1,
+    }));
+
+  // 计算统计数据
+  const totalProjects = currentYearRatings.reduce((sum, r) => sum + r.projectCount, 0);
+  const avgScore = currentYearRatings.length > 0
+    ? currentYearRatings.reduce((sum, r) => sum + r.avgQualityScore, 0) / currentYearRatings.length
+    : 0;
+  const activeSuppliers = currentYearRatings.length;
+  const highLevelSuppliers = currentYearRatings.filter(r => r.supplier.level === 'S' || r.supplier.level === 'A').length;
+  const highLevelPercent = activeSuppliers > 0 ? Math.round((highLevelSuppliers / activeSuppliers) * 100) : 0;
 
   if (!canViewReport) {
     return (
@@ -52,7 +104,7 @@ export default function ReportsPage() {
     <div className="space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-semibold text-gray-900">报表统计</h1>
+        <h1 className="text-2xl font-semibold text-gray-900">报表统计 - {displayYear}年度</h1>
         <div className="flex gap-2">
           {canExport && (
             <Button variant="outline" onClick={() => alert('导出功能开发中...')}>
@@ -69,8 +121,8 @@ export default function ReportsPage() {
             <CardTitle className="text-sm font-medium text-gray-600">合作项目数</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">45</div>
-            <p className="text-xs text-gray-500 mt-1">较上年 +8</p>
+            <div className="text-2xl font-bold">{totalProjects}</div>
+            <p className="text-xs text-gray-500 mt-1">{displayYear}年度</p>
           </CardContent>
         </Card>
         <Card>
@@ -78,8 +130,8 @@ export default function ReportsPage() {
             <CardTitle className="text-sm font-medium text-gray-600">平均品质分数</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-primary">4.1 / 5.0</div>
-            <p className="text-xs text-gray-500 mt-1">较上年 +0.2</p>
+            <div className="text-2xl font-bold text-primary">{avgScore.toFixed(1)} / 5.0</div>
+            <p className="text-xs text-gray-500 mt-1">6 维度加权平均</p>
           </CardContent>
         </Card>
         <Card>
@@ -87,8 +139,8 @@ export default function ReportsPage() {
             <CardTitle className="text-sm font-medium text-gray-600">活跃供应商</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">24</div>
-            <p className="text-xs text-gray-500 mt-1">S/A 级占 45%</p>
+            <div className="text-2xl font-bold">{activeSuppliers}</div>
+            <p className="text-xs text-gray-500 mt-1">S/A 级占 {highLevelPercent}%</p>
           </CardContent>
         </Card>
       </div>
@@ -96,52 +148,58 @@ export default function ReportsPage() {
       {/* Ranking Table */}
       <Card>
         <CardHeader>
-          <CardTitle>年度供应商排名</CardTitle>
+          <CardTitle>{displayYear}年度供应商排名</CardTitle>
         </CardHeader>
         <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead className="w-16 text-center">排名</TableHead>
-                <TableHead>供应商</TableHead>
-                <TableHead className="text-center">等级</TableHead>
-                <TableHead className="text-center">项目数</TableHead>
-                <TableHead className="text-center">平均分</TableHead>
-                <TableHead className="text-center">性价比</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {rankingData.map((item) => (
-                <TableRow key={item.name}>
-                  <TableCell className="text-center">
-                    <div className="w-8 h-8 mx-auto rounded-full flex items-center justify-center font-bold
-                      {item.rank === 1 ? 'bg-yellow-100 text-yellow-700' :
-                        item.rank === 2 ? 'bg-gray-100 text-gray-700' :
-                        item.rank === 3 ? 'bg-orange-100 text-orange-700' :
-                        'bg-gray-50 text-gray-500'}">
-                      {item.rank}
-                    </div>
-                  </TableCell>
-                  <TableCell className="font-medium">{item.name}</TableCell>
-                  <TableCell className="text-center">
-                    <Badge className={levelColors[item.level as keyof typeof levelColors]}>
-                      {item.level}
-                    </Badge>
-                  </TableCell>
-                  <TableCell className="text-center">{item.projects}</TableCell>
-                  <TableCell className="text-center">
-                    <div className="flex items-center justify-center gap-1">
-                      <span className="font-semibold">{item.avgScore}</span>
-                      <span className="text-xs text-gray-500">/ 5.0</span>
-                    </div>
-                  </TableCell>
-                  <TableCell className="text-center">
-                    <span className="text-sm font-medium">{item.costPerformance.toFixed(3)}</span>
-                  </TableCell>
+          {loading ? (
+            <div className="text-center py-8 text-gray-500">加载中...</div>
+          ) : currentYearRatings.length === 0 ? (
+            <div className="text-center py-8 text-gray-500">暂无数据</div>
+          ) : (
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead className="w-16 text-center">排名</TableHead>
+                  <TableHead>供应商</TableHead>
+                  <TableHead className="text-center">等级</TableHead>
+                  <TableHead className="text-center">项目数</TableHead>
+                  <TableHead className="text-center">平均分</TableHead>
+                  <TableHead className="text-center">性价比</TableHead>
                 </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+              </TableHeader>
+              <TableBody>
+                {currentYearRatings.map((item) => (
+                  <TableRow key={item.id}>
+                    <TableCell className="text-center">
+                      <div className={`w-8 h-8 mx-auto rounded-full flex items-center justify-center font-bold
+                        ${item.rank === 1 ? 'bg-yellow-100 text-yellow-700' :
+                          item.rank === 2 ? 'bg-gray-100 text-gray-700' :
+                          item.rank === 3 ? 'bg-orange-100 text-orange-700' :
+                          'bg-gray-50 text-gray-500'}`}>
+                        {item.rank}
+                      </div>
+                    </TableCell>
+                    <TableCell className="font-medium">{item.supplier?.name || '-'}</TableCell>
+                    <TableCell className="text-center">
+                      <Badge className={levelColors[item.supplier?.level as keyof typeof levelColors]}>
+                        {item.supplier?.level}
+                      </Badge>
+                    </TableCell>
+                    <TableCell className="text-center">{item.projectCount}</TableCell>
+                    <TableCell className="text-center">
+                      <div className="flex items-center justify-center gap-1">
+                        <span className="font-semibold">{item.avgQualityScore.toFixed(1)}</span>
+                        <span className="text-xs text-gray-500">/ 5.0</span>
+                      </div>
+                    </TableCell>
+                    <TableCell className="text-center">
+                      <span className="text-sm font-medium">{item.costPerformance.toFixed(3)}</span>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          )}
         </CardContent>
       </Card>
     </div>

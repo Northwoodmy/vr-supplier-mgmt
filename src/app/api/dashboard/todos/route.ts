@@ -59,7 +59,7 @@ export async function GET() {
       ...pendingReviews.map((review) => ({
         id: review.id,
         type: 'evaluation' as const,
-        task: `评审《${review.project.name}》- ${review.supplier.name}`,
+        task: `评审《${review.project.name}》- ${review.supplier?.name || '未关联'}`,
         priority: '高' as const,
         link: `/evaluations/${review.id}`,
         createdAt: review.createdAt,

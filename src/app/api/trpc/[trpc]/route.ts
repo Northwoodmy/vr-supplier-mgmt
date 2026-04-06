@@ -39,7 +39,7 @@ async function createTRPCContextFromRequest(request: Request) {
         user = {
           id: session.user.id,
           username: session.user.username,
-          email: session.user.email,
+          email: session.user.email || '',
           displayName: session.user.displayName,
           avatar: session.user.avatar,
           roles,

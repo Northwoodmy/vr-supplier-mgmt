@@ -138,7 +138,7 @@ export default function EvaluationDetailPage() {
           </div>
           <h1 className="text-2xl font-semibold text-gray-900">品质评估详情</h1>
           <p className="text-gray-500 mt-1">
-            {evaluation.project.name} · {evaluation.supplier.name}
+            {evaluation.project.name} · {evaluation.supplier?.name || '未关联'}
           </p>
         </div>
         <div className="flex items-center gap-2">
@@ -223,15 +223,15 @@ export default function EvaluationDetailPage() {
           <CardContent className="space-y-2">
             <div>
               <div className="text-sm text-gray-500">供应商名称</div>
-              <div className="font-medium">{evaluation.supplier.name}</div>
+              <div className="font-medium">{evaluation.supplier?.name || '未关联'}</div>
             </div>
             <div>
               <div className="text-sm text-gray-500">技术栈</div>
-              <div className="font-medium">{evaluation.supplier.techStack}</div>
+              <div className="font-medium">{evaluation.supplier?.techStack || '-'}</div>
             </div>
             <div>
               <div className="text-sm text-gray-500">供应商等级</div>
-              <Badge variant="outline">{evaluation.supplier.level}级</Badge>
+              <Badge variant="outline">{evaluation.supplier?.level || '-'}</Badge>
             </div>
           </CardContent>
         </Card>

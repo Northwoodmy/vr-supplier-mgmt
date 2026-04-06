@@ -109,9 +109,14 @@ export default function SuppliersPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-semibold text-gray-900">供应商管理</h1>
-        <Button onClick={() => router.push('/suppliers/new')}>
-          + 新建供应商
-        </Button>
+        <div className="flex gap-2">
+          <Button variant="outline" onClick={() => router.push('/suppliers/apply')}>
+            供应商准入申请
+          </Button>
+          <Button onClick={() => router.push('/suppliers/new')}>
+            + 新建供应商
+          </Button>
+        </div>
       </div>
 
       {/* Filters */}

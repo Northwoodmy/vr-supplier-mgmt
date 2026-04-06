@@ -308,6 +308,7 @@ export default function NewProjectPage() {
                   type="date"
                 />
               </div>
+            </div>
 
             <div className="grid gap-4 md:grid-cols-2">
               <div className="space-y-2">
