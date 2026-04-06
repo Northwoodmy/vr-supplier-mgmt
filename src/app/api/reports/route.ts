@@ -1,13 +1,47 @@
 import { prisma } from '@/lib/prisma';
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
+
+// 获取可用的年份列表
+export async function getAvailableYears() {
+  try {
+    // 从 Project 表获取所有有项目的年份
+    const projects = await prisma.project.findMany({
+      select: {
+        createdAt: true,
+      },
+      orderBy: {
+        createdAt: 'desc',
+      },
+    });
+
+    const years = Array.from(
+      new Set(projects.map(p => new Date(p.createdAt).getFullYear()))
+    ).sort((a, b) => b - a);
+
+    return NextResponse.json(years);
+  } catch (error) {
+    console.error('Failed to fetch available years:', error);
+    return NextResponse.json([], { status: 500 });
+  }
+}
 
 // 获取供应商评级报表
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
-    // 获取当前年份
-    const currentYear = new Date().getFullYear();
-    const yearStart = new Date(currentYear, 0, 1);
-    const yearEnd = new Date(currentYear + 1, 0, 1);
+    // 从 URL 参数获取年份，默认为当前年份
+    const searchParams = request.nextUrl.searchParams;
+    const yearParam = searchParams.get('year');
+
+    // 如果请求可用年份列表
+    if (yearParam === 'list') {
+      return getAvailableYears();
+    }
+
+    const targetYear = yearParam ? parseInt(yearParam, 10) : new Date().getFullYear();
+
+    // 获取该年份的起止时间
+    const yearStart = new Date(targetYear, 0, 1);
+    const yearEnd = new Date(targetYear + 1, 0, 1);
 
     // 获取所有供应商
     const suppliers = await prisma.supplier.findMany({
@@ -61,9 +95,9 @@ export async function GET() {
         const costPerformance = totalCost > 0 ? avgQualityScore / (totalCost / 10000) : 0;
 
         return {
-          id: `rating-${supplier.id}-${currentYear}`,
+          id: `rating-${supplier.id}-${targetYear}`,
           supplierId: supplier.id,
-          year: currentYear,
+          year: targetYear,
           projectCount,
           avgQualityScore: Math.round(avgQualityScore * 100) / 100,
           totalCost: Math.round(totalCost * 100) / 100,

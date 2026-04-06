@@ -40,18 +40,43 @@ export default function ReportsPage() {
   const { data: currentUser } = useAuth();
   const [ratings, setRatings] = useState<SupplierRating[]>([]);
   const [loading, setLoading] = useState(true);
+  const [selectedYear, setSelectedYear] = useState<number>(new Date().getFullYear());
+  const [availableYears, setAvailableYears] = useState<number[]>([]);
 
   // 检查权限
   const canViewReport = currentUser?.permissions?.includes('report:view');
   const canExport = currentUser?.permissions?.includes('report:export');
+
+  // 获取可用年份列表
+  useEffect(() => {
+    if (!canViewReport) return;
+
+    async function fetchYears() {
+      try {
+        const res = await fetch('/api/reports?year=list');
+        if (res.ok) {
+          const years = await res.json();
+          setAvailableYears(years);
+          // 默认选择最新年份
+          if (years.length > 0) {
+            setSelectedYear(years[0]);
+          }
+        }
+      } catch (error) {
+        console.error('Failed to fetch available years:', error);
+      }
+    }
+    fetchYears();
+  }, [canViewReport]);
 
   // 获取报表数据
   useEffect(() => {
     if (!canViewReport) return;
 
     async function fetchData() {
+      setLoading(true);
       try {
-        const res = await fetch('/api/reports');
+        const res = await fetch(`/api/reports?year=${selectedYear}`);
         if (res.ok) {
           const data = await res.json();
           setRatings(data);
@@ -63,16 +88,11 @@ export default function ReportsPage() {
       }
     }
     fetchData();
-  }, [canViewReport]);
+  }, [canViewReport, selectedYear]);
 
-  // 计算最新年份的数据和排名
-  const currentYear = new Date().getFullYear();
-  // 获取数据库中最新的年份（可能不是当前年份）
-  const latestYear = ratings.length > 0 ? Math.max(...ratings.map(r => r.year)) : currentYear;
-  const displayYear = latestYear;
-
+  // 按选中年份过滤和排名
   const currentYearRatings = ratings
-    .filter(r => r.year === displayYear && r.supplier)
+    .filter(r => r.supplier)
     .sort((a, b) => b.costPerformance - a.costPerformance)
     .map((rating, index) => ({
       ...rating,
@@ -104,7 +124,22 @@ export default function ReportsPage() {
     <div className="space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-semibold text-gray-900">报表统计 - {displayYear}年度</h1>
+        <div className="flex items-center gap-4">
+          <h1 className="text-2xl font-semibold text-gray-900">报表统计</h1>
+          <div className="relative">
+            <select
+              value={selectedYear}
+              onChange={(e) => setSelectedYear(parseInt(e.target.value, 10))}
+              className="h-10 rounded-md border border-input bg-background px-4 py-2 text-sm focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/50"
+            >
+              {availableYears.map((year) => (
+                <option key={year} value={year}>
+                  {year}年度
+                </option>
+              ))}
+            </select>
+          </div>
+        </div>
         <div className="flex gap-2">
           {canExport && (
             <Button variant="outline" onClick={() => alert('导出功能开发中...')}>
@@ -122,7 +157,7 @@ export default function ReportsPage() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{totalProjects}</div>
-            <p className="text-xs text-gray-500 mt-1">{displayYear}年度</p>
+            <p className="text-xs text-gray-500 mt-1">{selectedYear}年度</p>
           </CardContent>
         </Card>
         <Card>
@@ -148,7 +183,7 @@ export default function ReportsPage() {
       {/* Ranking Table */}
       <Card>
         <CardHeader>
-          <CardTitle>{displayYear}年度供应商排名</CardTitle>
+          <CardTitle>{selectedYear}年度供应商排名</CardTitle>
         </CardHeader>
         <CardContent>
           {loading ? (
