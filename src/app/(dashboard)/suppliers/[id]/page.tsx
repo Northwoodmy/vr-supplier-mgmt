@@ -5,6 +5,10 @@ import { useParams, useRouter } from 'next/navigation';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { LevelPermissionCard } from '@/components/supplier/level-permission-card';
+import { LevelChangeDialog } from '@/components/supplier/level-change-dialog';
+import { getLevelConfig, getLevelColorClass, getComplexityLabel } from '@/lib/supplier-level-config';
+import { useAuth } from '@/lib/auth-hooks';
 
 interface Supplier {
   id: string;
@@ -75,6 +79,16 @@ interface Supplier {
   }>;
 }
 
+interface LevelChange {
+  id: string;
+  oldLevel: string;
+  newLevel: string;
+  changeReason: string;
+  changeType: string;
+  quarter?: string;
+  createdAt: string;
+}
+
 const levelConfig: Record<string, { label: string; color: string }> = {
   S: { label: 'S 级', color: 'bg-purple-100 text-purple-700' },
   A: { label: 'A 级', color: 'bg-blue-100 text-blue-700' },
@@ -108,9 +122,15 @@ const complexityConfig: Record<string, string> = {
 export default function SupplierDetailPage() {
   const params = useParams();
   const router = useRouter();
+  const { data: currentUser } = useAuth();
   const [supplier, setSupplier] = useState<Supplier | null>(null);
+  const [levelChanges, setLevelChanges] = useState<LevelChange[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [backLink, setBackLink] = useState('/suppliers');
+  const [showLevelChangeDialog, setShowLevelChangeDialog] = useState(false);
+
+  // 检查权限
+  const canManage = currentUser?.permissions?.includes('supplier:manage');
 
   useEffect(() => {
     if (!params?.id) return;
@@ -124,9 +144,16 @@ export default function SupplierDetailPage() {
 
     async function fetchSupplier() {
       try {
-        const res = await fetch(`/api/suppliers/${params.id}`);
-        if (res.ok) {
-          setSupplier(await res.json());
+        const [supplierRes, changesRes] = await Promise.all([
+          fetch(`/api/suppliers/${params.id}`),
+          fetch(`/api/suppliers/${params.id}/level-history`),
+        ]);
+        if (supplierRes.ok) {
+          setSupplier(await supplierRes.json());
+        }
+        if (changesRes.ok) {
+          const data = await changesRes.json();
+          setLevelChanges(data);
         }
       } catch (error) {
         console.error('Failed to fetch supplier:', error);
@@ -166,6 +193,11 @@ export default function SupplierDetailPage() {
     ? supplier.qualityReviews.reduce((sum, r) => sum + r.totalScore, 0) / supplier.qualityReviews.length
     : null;
 
+  const levelConfig = getLevelConfig(supplier.level);
+  const activeProjectCount = supplier.projects.filter(p =>
+    p.project.status !== 'completed' && p.project.status !== 'cancelled'
+  ).length;
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -177,15 +209,20 @@ export default function SupplierDetailPage() {
           )}
           <div className="flex items-center gap-2 mt-2">
             <Badge variant="outline">{supplier.techStack}</Badge>
-            <Badge className={levelConfig[supplier.level]?.color}>
-              {levelConfig[supplier.level]?.label}
+            <Badge className={getLevelColorClass(supplier.level)}>
+              {levelConfig.label}
             </Badge>
-            <Badge className={statusConfig[supplier.status]?.color}>
-              {statusConfig[supplier.status]?.label}
+            <Badge className={statusConfig[supplier.status]?.color ? getLevelColorClass(supplier.status) : 'bg-gray-100 text-gray-700'}>
+              {statusConfig[supplier.status]?.label || supplier.status}
             </Badge>
           </div>
         </div>
         <div className="flex items-center gap-2">
+          {canManage && (
+            <Button variant="outline" onClick={() => setShowLevelChangeDialog(true)}>
+              调整等级
+            </Button>
+          )}
           <Button variant="outline" onClick={() => router.push(`/suppliers/${supplier.id}/edit`)}>
             编辑
           </Button>
@@ -194,6 +231,12 @@ export default function SupplierDetailPage() {
           </Button>
         </div>
       </div>
+
+      {/* 等级权益卡片 - 新增 */}
+      <LevelPermissionCard
+        level={supplier.level}
+        currentProjectCount={activeProjectCount}
+      />
 
       {/* 基本信息 */}
       <Card>
@@ -549,6 +592,85 @@ export default function SupplierDetailPage() {
             )}
           </CardContent>
         </Card>
+      )}
+
+      {/* 等级变更历史 - 新增 */}
+      <Card>
+        <CardHeader>
+          <CardTitle>等级变更历史</CardTitle>
+        </CardHeader>
+        <CardContent>
+          {levelChanges.length > 0 ? (
+            <div className="space-y-3">
+              {levelChanges.map((change) => (
+                <div
+                  key={change.id}
+                  className="flex items-center justify-between p-4 border rounded-lg bg-gray-50"
+                >
+                  <div className="flex items-center gap-3">
+                    {/* 变更类型图标 */}
+                    {change.changeType === 'automatic' ? (
+                      <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center">
+                        <svg className="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                        </svg>
+                      </div>
+                    ) : (
+                      <div className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center">
+                        <svg className="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                        </svg>
+                      </div>
+                    )}
+
+                    {/* 等级变化 */}
+                    <div className="flex items-center gap-2">
+                      <Badge className={getLevelColorClass(change.oldLevel)}>{change.oldLevel}</Badge>
+                      <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
+                      </svg>
+                      <Badge className={getLevelColorClass(change.newLevel)}>{change.newLevel}</Badge>
+                    </div>
+                  </div>
+
+                  <div className="text-right">
+                    <div className="text-sm font-medium text-gray-900">{change.changeReason}</div>
+                    <div className="text-xs text-gray-500">
+                      {new Date(change.createdAt).toLocaleDateString('zh-CN')}
+                      {change.quarter && ` · ${change.quarter}`}
+                      <span className="ml-2">
+                        {change.changeType === 'automatic' ? '(自动)' : '(手动)'}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="text-center py-8 text-gray-500">暂无等级变更记录</div>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* 等级调整对话框 */}
+      {supplier && showLevelChangeDialog && (
+        <LevelChangeDialog
+          supplier={supplier}
+          open={showLevelChangeDialog}
+          onOpenChange={(open) => setShowLevelChangeDialog(open)}
+          onSuccess={() => {
+            setShowLevelChangeDialog(false);
+            // 重新加载供应商数据和等级变更历史
+            fetch(`/api/suppliers/${params.id}`)
+              .then(res => res.json())
+              .then(setSupplier)
+              .catch(console.error);
+            fetch(`/api/suppliers/${params.id}/level-history`)
+              .then(res => res.json())
+              .then(setLevelChanges)
+              .catch(console.error);
+          }}
+        />
       )}
     </div>
   );

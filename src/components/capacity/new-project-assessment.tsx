@@ -88,7 +88,12 @@ export function NewProjectAssessment({ supplierId, supplierName }: NewProjectAss
               disabled={showAssessment}
             >
               <SelectTrigger>
-                <SelectValue />
+                <SelectValue placeholder="请选择复杂度" items={[
+                  { value: 'simple', label: '简单 (0.8x)' },
+                  { value: 'medium', label: '中等 (1.0x)' },
+                  { value: 'complex', label: '复杂 (1.3x)' },
+                  { value: 'extreme', label: '极复杂 (1.6x)' },
+                ]} />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="simple">简单 (0.8x)</SelectItem>

@@ -122,7 +122,8 @@ export default function ProjectsPage() {
               </div>
             ) : (
               filteredProjects.map((project: any) => {
-                const status = statusConfig[project.status as keyof typeof statusConfig];
+                const status = statusConfig[project.status as keyof typeof statusConfig] ||
+                               { label: project.status, color: 'bg-gray-100 text-gray-700' };
                 const supplierCount = project._count?.suppliers || 0;
                 const deliveryCount = project._count?.deliveries || 0;
                 const progress = project.currentStage === 'completed' ? 100 :

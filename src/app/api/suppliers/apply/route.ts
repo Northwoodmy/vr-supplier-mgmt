@@ -4,6 +4,7 @@ import { NextResponse } from 'next/server';
 export async function POST(request: Request) {
   try {
     const body = await request.json();
+    console.log('[Apply API] Request body:', JSON.stringify(body, null, 2));
     const {
       // 基本信息
       companyName,
@@ -21,6 +22,8 @@ export async function POST(request: Request) {
       teamSize,
       totalMembers,
       capacityFactor,
+      // 引擎能力
+      engineCapability,
       // JSON 字段
       coreMembers,
       equipment,
@@ -66,6 +69,7 @@ export async function POST(request: Request) {
         businessLicense: businessLicense || null,
         businessScope: businessScope || null,
         teamSize: teamSize ? parseInt(teamSize) : (totalMembers ? parseInt(totalMembers) : null),
+        engineCapability: engineCapability || null,
         bankRating: bankRating || null,
         creditRecord: creditRecord || null,
         // JSON 字段
@@ -74,6 +78,8 @@ export async function POST(request: Request) {
         sampleWorks: sampleWorks && sampleWorks.length > 0 ? JSON.stringify(sampleWorks) : null,
       },
     });
+
+    console.log('[Apply API] Application created:', application.id);
 
     return NextResponse.json({
       id: application.id,

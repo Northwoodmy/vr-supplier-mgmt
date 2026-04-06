@@ -62,6 +62,7 @@ const actionColors: Record<string, string> = {
   LOGOUT: 'bg-gray-100 text-gray-700',
   EXPORT: 'bg-yellow-100 text-yellow-700',
   ASSIGN_ROLE: 'bg-indigo-100 text-indigo-700',
+  LEVEL_CHANGE: 'bg-pink-100 text-pink-700',
 };
 
 const resourceColors: Record<string, string> = {
@@ -210,7 +211,7 @@ export default function AuditLogsPage() {
                 onValueChange={(value) => setFilters({ ...filters, action: value || '', page: 1 })}
               >
                 <SelectTrigger>
-                  <SelectValue placeholder="全部" />
+                  <SelectValue placeholder="全部" items={[{ value: '', label: '全部' }, ...(actionStats?.map(s => ({ value: s.action || '', label: s.action || '' })) || [])]} />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="">全部</SelectItem>
@@ -229,7 +230,7 @@ export default function AuditLogsPage() {
                 onValueChange={(value) => setFilters({ ...filters, resource: value || '', page: 1 })}
               >
                 <SelectTrigger>
-                  <SelectValue placeholder="全部" />
+                  <SelectValue placeholder="全部" items={[{ value: '', label: '全部' }, ...(resourceStats?.map(s => ({ value: s.resource || '', label: s.resource || '' })) || [])]} />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="">全部</SelectItem>

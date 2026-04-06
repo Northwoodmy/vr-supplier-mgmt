@@ -316,9 +316,7 @@ export default function NewSupplierPage() {
                   onValueChange={(value) => setFormData(prev => ({ ...prev, level: (value as 'S' | 'A' | 'B' | 'C') || 'B' }))}
                 >
                   <SelectTrigger>
-                    <SelectValue placeholder="请选择等级">
-                      {(value) => LEVEL_OPTIONS.find(opt => opt.value === value)?.label || value}
-                    </SelectValue>
+                    <SelectValue placeholder="请选择等级" items={LEVEL_OPTIONS} />
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="S">S 级 - 战略合作伙伴</SelectItem>
@@ -335,9 +333,7 @@ export default function NewSupplierPage() {
                   onValueChange={(value) => setFormData(prev => ({ ...prev, techStack: value || 'UE5' }))}
                 >
                   <SelectTrigger>
-                    <SelectValue placeholder="请选择技术栈">
-                      {(value) => TECH_STACK_OPTIONS.find(opt => opt.value === value)?.label || value}
-                    </SelectValue>
+                    <SelectValue placeholder="请选择技术栈" items={TECH_STACK_OPTIONS} />
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="UE5">UE5</SelectItem>
@@ -353,9 +349,7 @@ export default function NewSupplierPage() {
                   onValueChange={(value) => setFormData(prev => ({ ...prev, status: (value as 'active' | 'inactive' | 'blacklisted') || 'active' }))}
                 >
                   <SelectTrigger>
-                    <SelectValue placeholder="请选择状态">
-                      {(value) => STATUS_OPTIONS.find(opt => opt.value === value)?.label || value}
-                    </SelectValue>
+                    <SelectValue placeholder="请选择状态" items={STATUS_OPTIONS} />
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="active">活跃</SelectItem>
@@ -505,9 +499,7 @@ export default function NewSupplierPage() {
                     onValueChange={(value) => setFormData(prev => ({ ...prev, taxType: value || 'general' }))}
                   >
                     <SelectTrigger>
-                      <SelectValue placeholder="请选择纳税人类型">
-                        {(value) => TAX_TYPE_OPTIONS.find(opt => opt.value === value)?.label || value}
-                      </SelectValue>
+                      <SelectValue placeholder="请选择纳税人类型" items={TAX_TYPE_OPTIONS} />
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="general">一般纳税人</SelectItem>
@@ -540,9 +532,7 @@ export default function NewSupplierPage() {
                     onValueChange={(value) => setFormData(prev => ({ ...prev, capacityFactor: value || '0.8' }))}
                   >
                     <SelectTrigger>
-                      <SelectValue placeholder="请选择产能系数">
-                        {(value) => CAPACITY_FACTOR_OPTIONS.find(opt => opt.value === value)?.label || value}
-                      </SelectValue>
+                      <SelectValue placeholder="请选择产能系数" items={CAPACITY_FACTOR_OPTIONS} />
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="0.7">0.7 - 小型团队 (&lt;10 人) / 大型团队 (&gt;50 人)</SelectItem>
@@ -568,7 +558,7 @@ export default function NewSupplierPage() {
                           onValueChange={(value) => updateTeamMember(index, 'role', value || '')}
                         >
                           <SelectTrigger>
-                            <SelectValue placeholder="选择角色" />
+                            <SelectValue placeholder="选择角色" items={ROLE_OPTIONS.map(r => ({ value: r.value, label: r.value }))} />
                           </SelectTrigger>
                           <SelectContent>
                             {ROLE_OPTIONS.map((option) => (

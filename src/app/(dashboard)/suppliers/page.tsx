@@ -5,6 +5,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
+import { Progress } from '@/components/ui/progress';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -14,6 +15,8 @@ import {
 import { useRouter } from 'next/navigation';
 import { SaturationBadge } from '@/components/capacity/saturation-badge';
 import { useAuth } from '@/lib/auth-hooks';
+import { LevelChangeDialog } from '@/components/supplier/level-change-dialog';
+import { getLevelConfig, getLevelColorClass } from '@/lib/supplier-level-config';
 
 interface Supplier {
   id: string;
@@ -50,9 +53,11 @@ export default function SuppliersPage() {
   const [suppliers, setSuppliers] = useState<Supplier[]>([]);
   const [saturations, setSaturations] = useState<Saturation[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [levelChangeSupplier, setLevelChangeSupplier] = useState<Supplier | null>(null);
 
   // 检查权限
   const canDelete = currentUser?.permissions?.includes('supplier:delete');
+  const canManage = currentUser?.permissions?.includes('supplier:manage');
 
   useEffect(() => {
     async function fetchData() {
@@ -167,6 +172,10 @@ export default function SuppliersPage() {
           filteredSuppliers.map((supplier) => {
             const saturation = getSaturation(supplier.id);
             const projectCount = supplier._count?.projects || 0;
+            const levelConfig = getLevelConfig(supplier.level);
+            const isAtLimit = projectCount >= levelConfig.maxProjects;
+            const projectPercent = (projectCount / levelConfig.maxProjects) * 100;
+
             return (
               <Card
                 key={supplier.id}
@@ -184,55 +193,72 @@ export default function SuppliersPage() {
                     </Badge>
                   </div>
 
+                  {/* 项目配额 - 新增 */}
                   <div className="space-y-2">
                     <div className="flex items-center justify-between text-sm">
                       <span className="text-gray-600">进行中项目</span>
-                      <span className="font-medium">{projectCount} 个</span>
+                      <span className={`font-medium ${isAtLimit ? 'text-red-600' : ''}`}>
+                        {projectCount} / {levelConfig.maxProjects} 个
+                      </span>
                     </div>
-                    {saturation && (
-                      <div className="space-y-1">
-                        <div className="flex items-center justify-between text-sm">
-                          <span className="text-gray-600">产能饱和度</span>
-                          <span className="font-medium">{saturation.saturationRate}%</span>
-                        </div>
-                        <SaturationBadge saturationRate={saturation.saturationRate} />
-                      </div>
+                    <Progress
+                      value={Math.min(projectPercent, 100)}
+                      className={`h-2 ${
+                        isAtLimit
+                          ? '[&>div]:bg-red-500'
+                          : projectPercent > 80
+                          ? '[&>div]:bg-orange-500'
+                          : '[&>div]:bg-green-500'
+                      }`}
+                    />
+                    {isAtLimit && (
+                      <p className="text-xs text-red-600 font-medium">
+                        已达项目上限，不可分配新项目
+                      </p>
                     )}
                   </div>
 
-                  <div className="flex items-center justify-between pt-2">
-                    <Badge variant={supplier.status === 'active' ? 'default' : 'secondary'}>
-                      {supplier.status === 'active' ? '活跃' : '停用'}
-                    </Badge>
-                    <DropdownMenu>
-                      <DropdownMenuTrigger
-                        onClick={(e) => e.stopPropagation()}
-                        render={
-                          <Button variant="ghost" size="sm">
-                            操作
-                          </Button>
-                        }
-                      />
-                      <DropdownMenuContent align="end">
-                        <DropdownMenuItem onClick={() => router.push(`/suppliers/${supplier.id}`)}>
-                          查看详情
-                        </DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => router.push(`/suppliers/${supplier.id}/edit`)}>
-                          编辑
-                        </DropdownMenuItem>
-                        {canDelete && (
-                          <DropdownMenuItem
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleDelete(supplier.id);
-                            }}
-                            className="text-red-600"
-                          >
-                            删除
-                          </DropdownMenuItem>
-                        )}
-                      </DropdownMenuContent>
-                    </DropdownMenu>
+                  {/* 权益摘要 - 新增 */}
+                  <div className="grid grid-cols-2 gap-2 text-xs">
+                    <div className="flex items-center gap-1">
+                      <span className="text-gray-500">付款周期</span>
+                      <span className="font-medium">{levelConfig.paymentDays}天</span>
+                    </div>
+                    <div className="flex items-center gap-1">
+                      <span className="text-gray-500">预付款</span>
+                      <span className="font-medium">{levelConfig.prepaymentRate}%</span>
+                    </div>
+                  </div>
+
+                  {/* 饱和度 */}
+                  {saturation && (
+                    <div className="space-y-1">
+                      <div className="flex items-center justify-between text-sm">
+                        <span className="text-gray-600">产能饱和度</span>
+                        <span className="font-medium">{saturation.saturationRate}%</span>
+                      </div>
+                      <SaturationBadge saturationRate={saturation.saturationRate} />
+                    </div>
+                  )}
+
+                  {/* 操作按钮 - 新增 */}
+                  <div className="flex gap-2 pt-2 border-t" onClick={(e) => e.stopPropagation()}>
+                    {canManage && (
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => setLevelChangeSupplier(supplier)}
+                      >
+                        调整等级
+                      </Button>
+                    )}
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      onClick={() => router.push(`/suppliers/${supplier.id}`)}
+                    >
+                      详情
+                    </Button>
                   </div>
                 </CardContent>
               </Card>
@@ -240,6 +266,23 @@ export default function SuppliersPage() {
           })
         )}
       </div>
+
+      {/* 等级调整弹窗 */}
+      {levelChangeSupplier && (
+        <LevelChangeDialog
+          supplier={levelChangeSupplier}
+          open={!!levelChangeSupplier}
+          onOpenChange={(open) => {
+            if (!open) setLevelChangeSupplier(null);
+          }}
+          onSuccess={() => {
+            // 刷新列表
+            fetch('/api/suppliers')
+              .then(res => res.json())
+              .then(data => setSuppliers(data));
+          }}
+        />
+      )}
     </div>
   );
 }

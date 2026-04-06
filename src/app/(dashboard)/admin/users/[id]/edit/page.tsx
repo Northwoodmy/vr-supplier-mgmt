@@ -226,9 +226,7 @@ export default function EditUserPage() {
                 onValueChange={(value) => updateField('roleIds', [value || ''])}
               >
                 <SelectTrigger>
-                  <SelectValue placeholder="选择角色">
-                    {(value) => roles.find(r => r.id === value)?.displayName || value}
-                  </SelectValue>
+                  <SelectValue placeholder="选择角色" items={roles.map(r => ({ value: r.id, label: r.displayName }))} />
                 </SelectTrigger>
                 <SelectContent>
                   {roles.map((role) => (

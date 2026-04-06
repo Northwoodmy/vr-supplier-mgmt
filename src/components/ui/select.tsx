@@ -6,6 +6,10 @@ import { Select as SelectPrimitive } from "@base-ui/react/select"
 import { cn } from "@/lib/utils"
 import { ChevronDownIcon, CheckIcon, ChevronUpIcon } from "lucide-react"
 
+// Helper type for items prop
+type SelectItem = { value: string; label: string }
+
+// Use SelectPrimitive.Root directly without items prop wrapper
 const Select = SelectPrimitive.Root
 
 function SelectGroup({ className, ...props }: SelectPrimitive.Group.Props) {
@@ -18,7 +22,34 @@ function SelectGroup({ className, ...props }: SelectPrimitive.Group.Props) {
   )
 }
 
-function SelectValue({ className, placeholder, children, ...props }: SelectPrimitive.Value.Props & { placeholder?: string }) {
+function SelectValue({
+  className,
+  placeholder,
+  children,
+  items,
+  ...props
+}: SelectPrimitive.Value.Props & {
+  placeholder?: string
+  items?: SelectItem[]
+}) {
+  // If items are provided, use children as a function to display the label
+  if (items) {
+    return (
+      <SelectPrimitive.Value
+        data-slot="select-value"
+        className={cn("flex flex-1 text-left", className)}
+        placeholder={placeholder ? String(placeholder) : undefined}
+        {...props}
+      >
+        {(value) => {
+          const item = items.find(i => i.value === value)
+          const label = item?.label || value || placeholder || ''
+          return <>{label}</>
+        }}
+      </SelectPrimitive.Value>
+    )
+  }
+
   return (
     <SelectPrimitive.Value
       data-slot="select-value"
@@ -153,6 +184,7 @@ function SelectItem({
   return (
     <SelectPrimitive.Item
       data-slot="select-item"
+      value={value}
       className={cn(
         "relative flex w-full cursor-default items-center gap-1.5 rounded-md py-1 pr-8 pl-1.5 text-sm outline-hidden select-none focus:bg-accent focus:text-accent-foreground not-data-[variant=destructive]:focus:**:text-accent-foreground data-disabled:pointer-events-none data-disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4 *:[span]:last:flex *:[span]:last:items-center *:[span]:last:gap-2",
         className

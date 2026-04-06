@@ -441,9 +441,7 @@ export default function SupplierApplyPage() {
                   onValueChange={(value) => updateField('taxType', value || 'general')}
                 >
                   <SelectTrigger>
-                    <SelectValue placeholder="请选择">
-                      {(value) => TAX_TYPE_OPTIONS.find(opt => opt.value === value)?.label || value}
-                    </SelectValue>
+                    <SelectValue placeholder="请选择" items={TAX_TYPE_OPTIONS} />
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="general">一般纳税人</SelectItem>
@@ -461,9 +459,7 @@ export default function SupplierApplyPage() {
                   onValueChange={(value) => updateField('bankRating', value || 'AAA')}
                 >
                   <SelectTrigger>
-                    <SelectValue placeholder="请选择">
-                      {(value) => BANK_RATING_OPTIONS.find(opt => opt.value === value)?.label || value}
-                    </SelectValue>
+                    <SelectValue placeholder="请选择" items={BANK_RATING_OPTIONS} />
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="AAA">AAA（极好）</SelectItem>
@@ -515,9 +511,7 @@ export default function SupplierApplyPage() {
                   onValueChange={(value) => updateField('capacityFactor', value || '0.8')}
                 >
                   <SelectTrigger>
-                    <SelectValue placeholder="请选择">
-                      {(value) => CAPACITY_FACTOR_OPTIONS.find(opt => opt.value === value)?.label || value}
-                    </SelectValue>
+                    <SelectValue placeholder="请选择" items={CAPACITY_FACTOR_OPTIONS} />
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="0.7">0.7 - 小型团队 (&lt;10 人) / 大型团队 (&gt;50 人)</SelectItem>
@@ -548,9 +542,7 @@ export default function SupplierApplyPage() {
                         onValueChange={(value) => updateTeamMember(index, 'role', value || '')}
                       >
                         <SelectTrigger>
-                          <SelectValue placeholder="选择角色">
-                            {(value) => ROLE_OPTIONS.find(opt => opt.value === value)?.value || value}
-                          </SelectValue>
+                          <SelectValue placeholder="选择角色" items={ROLE_OPTIONS.map(r => ({ value: r.value, label: r.value }))} />
                         </SelectTrigger>
                         <SelectContent>
                           {ROLE_OPTIONS.map((option) => (

@@ -135,6 +135,12 @@ export default function EditProjectPage() {
     setFormData(prev => ({ ...prev, [field]: value }));
   };
 
+  const handleSelectChange = (field: keyof Project, value: string | null) => {
+    if (value !== null) {
+      setFormData(prev => ({ ...prev, [field]: value }));
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center py-12">
@@ -187,12 +193,10 @@ export default function EditProjectPage() {
                 <Label htmlFor="status">项目状态</Label>
                 <Select
                   value={formData.status}
-                  onValueChange={(value) => updateField('status', value || '')}
+                  onValueChange={(value) => handleSelectChange('status', value)}
                 >
                   <SelectTrigger>
-                    <SelectValue>
-                      {(value) => statusOptions.find(opt => opt.value === value)?.label || value}
-                    </SelectValue>
+                    <SelectValue placeholder="请选择项目状态" items={statusOptions} />
                   </SelectTrigger>
                   <SelectContent>
                     {statusOptions.map((opt) => (
@@ -208,12 +212,10 @@ export default function EditProjectPage() {
                 <Label htmlFor="currentStage">当前阶段</Label>
                 <Select
                   value={formData.currentStage}
-                  onValueChange={(value) => updateField('currentStage', value || '')}
+                  onValueChange={(value) => handleSelectChange('currentStage', value)}
                 >
                   <SelectTrigger>
-                    <SelectValue>
-                      {(value) => stageOptions.find(opt => opt.value === value)?.label || value}
-                    </SelectValue>
+                    <SelectValue placeholder="请选择当前阶段" items={stageOptions} />
                   </SelectTrigger>
                   <SelectContent>
                     {stageOptions.map((opt) => (

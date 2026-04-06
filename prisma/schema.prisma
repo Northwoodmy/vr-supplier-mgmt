@@ -173,6 +173,10 @@ model SupplierLevelChangeLog {
   newLevel    String   // S/A/B/C
   changeReason String  // 升降级原因
   changedBy   String   // 操作人
+  changeType  String   @default("manual") // "manual" | "automatic"
+  quarter     String?  // "2026-Q1" 格式
+  prevAvgScore Float?  // 变更前季度均分
+  nextAvgScore Float?  // 变更后季度均分
   createdAt   DateTime @default(now())
 
   supplier  Supplier @relation(fields: [supplierId], references: [id], onDelete: Cascade)

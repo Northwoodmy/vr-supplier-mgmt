@@ -334,4 +334,120 @@ export const supplierRouter = createTRPCRouter({
               saturationRate < 100 ? 'saturated' : 'overload',
     };
   }),
+
+  // 获取等级变更资格
+  getLevelChangeEligibility: protectedProcedure.input(z.string()).query(async ({ input }) => {
+    const supplierId = input;
+
+    // 获取最近 2 个季度的质量评估
+    const now = new Date();
+    const sixMonthsAgo = new Date(now.getTime() - 180 * 24 * 60 * 60 * 1000);
+
+    const reviews = await prisma.qualityReview.findMany({
+      where: {
+        supplierId,
+        createdAt: { gte: sixMonthsAgo },
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+
+    if (reviews.length === 0) {
+      return {
+        canUpgrade: false,
+        canDowngrade: false,
+        avgScore: 0,
+        consecutiveQuarters: 0,
+        message: '无评估记录',
+      };
+    }
+
+    // 计算平均分数
+    const avgScore = reviews.reduce((sum, r) => sum + r.totalScore, 0) / reviews.length;
+
+    // 简单判断：均分>=4.5 可升级，<3.0 可降级
+    const canUpgrade = avgScore >= 4.5;
+    const canDowngrade = avgScore < 3.0;
+
+    return {
+      canUpgrade,
+      canDowngrade,
+      avgScore: Math.round(avgScore * 100) / 100,
+      consecutiveQuarters: Math.min(Math.ceil(reviews.length / 2), 4),
+      downgradeReason: canDowngrade ? '季度均分低于 3.0' : undefined,
+    };
+  }),
+
+  // 执行等级变更
+  updateLevel: protectedProcedure
+    .input(z.object({
+      supplierId: z.string(),
+      newLevel: z.enum(['S', 'A', 'B', 'C']),
+      reason: z.string().min(1, '请输入变更原因'),
+      changeType: z.enum(['manual', 'automatic']).default('manual'),
+      quarter: z.string().optional(),
+    }))
+    .mutation(async ({ input, ctx }) => {
+      if (!ctx.user?.permissions?.includes('supplier:manage')) {
+        throw new Error('没有管理供应等级变更的权限');
+      }
+
+      const { supplierId, newLevel, reason, changeType, quarter } = input;
+
+      // 获取当前等级
+      const supplier = await prisma.supplier.findUnique({
+        where: { id: supplierId },
+      });
+
+      if (!supplier) {
+        throw new Error('供应商不存在');
+      }
+
+      const oldLevel = supplier.level;
+
+      // 等级未变化
+      if (oldLevel === newLevel) {
+        throw new Error('新等级与当前等级相同');
+      }
+
+      // 更新供应商等级
+      await prisma.supplier.update({
+        where: { id: supplierId },
+        data: {
+          level: newLevel,
+          levelUpdatedAt: new Date(),
+          levelChangeReason: reason,
+        },
+      });
+
+      // 记录变更日志
+      const changeLog = await prisma.supplierLevelChangeLog.create({
+        data: {
+          supplierId,
+          oldLevel,
+          newLevel,
+          changeReason: reason,
+          changedBy: ctx.user.id,
+          changeType,
+          quarter,
+          prevAvgScore: null,
+          nextAvgScore: null,
+        },
+      });
+
+      return {
+        success: true,
+        supplierId,
+        oldLevel,
+        newLevel,
+        changeLogId: changeLog.id,
+      };
+    }),
+
+  // 获取等级变更历史
+  getLevelChangeHistory: publicProcedure.input(z.string()).query(async ({ input }) => {
+    return prisma.supplierLevelChangeLog.findMany({
+      where: { supplierId: input },
+      orderBy: { createdAt: 'desc' },
+    });
+  }),
 });

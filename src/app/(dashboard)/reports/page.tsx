@@ -105,7 +105,7 @@ export default function ReportsPage() {
     ? currentYearRatings.reduce((sum, r) => sum + r.avgQualityScore, 0) / currentYearRatings.length
     : 0;
   const activeSuppliers = currentYearRatings.length;
-  const highLevelSuppliers = currentYearRatings.filter(r => r.supplier.level === 'S' || r.supplier.level === 'A').length;
+  const highLevelSuppliers = currentYearRatings.filter(r => r.supplier?.level === 'S' || r.supplier?.level === 'A').length;
   const highLevelPercent = activeSuppliers > 0 ? Math.round((highLevelSuppliers / activeSuppliers) * 100) : 0;
 
   if (!canViewReport) {

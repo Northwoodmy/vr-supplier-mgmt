@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { Slider } from '@/components/ui/slider';
+import { RatingSelector } from '@/components/ui/rating-selector';
 
 // 权重配置
 const WEIGHTS = {
@@ -179,21 +179,11 @@ export default function NewEvaluationPage() {
                     </div>
                   </div>
                 </div>
-                <Slider
-                  value={[scores[dim.key]]}
-                  min={1}
-                  max={5}
-                  step={0.1}
-                  onValueChange={(values) => updateScore(dim.key, values[0])}
-                  className="py-2"
+                <RatingSelector
+                  value={scores[dim.key]}
+                  onChange={(newValue) => updateScore(dim.key, newValue)}
+                  disabled={submitting}
                 />
-                <div className="flex justify-between text-xs text-gray-500">
-                  <span>1 - 非常差</span>
-                  <span>2 - 较差</span>
-                  <span>3 - 一般</span>
-                  <span>4 - 良好</span>
-                  <span>5 - 优秀</span>
-                </div>
               </div>
             ))}
 
